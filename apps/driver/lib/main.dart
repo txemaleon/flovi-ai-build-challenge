@@ -1,32 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final config = DriverRuntimeConfig.fromEnvironment();
+
+  if (config.hasSupabaseConfig) {
+    await Supabase.initialize(
+      url: config.supabaseUrl,
+      anonKey: config.supabaseAnonKey,
+    );
+  }
+
   runApp(
     MaterialApp(
       title: 'Flovi Driver',
-      home: DriverApp(
-        driverId: 'demo-driver',
-        service: InMemoryDriverGigService([
-          DriverGig(
-            id: 'gig-1',
-            origin: 'Madrid Chamartin',
-            destination: 'Seville Station',
-            scheduledAt: DateTime.utc(2026, 7, 10, 9, 30),
-            notes: 'Pickup at the north entrance.',
-            status: 'available',
-          ),
-          DriverGig(
-            id: 'gig-2',
-            origin: 'Barcelona Sants',
-            destination: 'Valencia Port',
-            scheduledAt: DateTime.utc(2026, 7, 12, 15),
-            notes: 'Bring parking ticket.',
-            status: 'available',
-          ),
-        ]),
+      home: DriverShell(
+        authService: config.hasSupabaseConfig
+            ? SupabaseDriverAuthService(
+                Supabase.instance.client,
+                redirectTo: config.oauthRedirectUrl,
+              )
+            : InMemoryDriverAuthService(
+                const DriverSession(userId: 'demo-driver'),
+              ),
+        createGigService: (_) => config.hasSupabaseConfig
+            ? SupabaseDriverGigService(Supabase.instance.client)
+            : InMemoryDriverGigService(seedDriverGigs()),
       ),
     ),
   );
+}
+
+class DriverRuntimeConfig {
+  const DriverRuntimeConfig({
+    required this.supabaseUrl,
+    required this.supabaseAnonKey,
+    required this.oauthRedirectUrl,
+  });
+
+  factory DriverRuntimeConfig.fromEnvironment() {
+    return const DriverRuntimeConfig(
+      supabaseUrl: String.fromEnvironment('SUPABASE_URL'),
+      supabaseAnonKey: String.fromEnvironment('SUPABASE_ANON_KEY'),
+      oauthRedirectUrl: String.fromEnvironment('SUPABASE_OAUTH_REDIRECT_URL'),
+    );
+  }
+
+  final String supabaseUrl;
+  final String supabaseAnonKey;
+  final String oauthRedirectUrl;
+
+  bool get hasSupabaseConfig =>
+      supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+}
+
+List<DriverGig> seedDriverGigs() {
+  return [
+    DriverGig(
+      id: 'gig-1',
+      origin: 'Madrid Chamartin',
+      destination: 'Seville Station',
+      scheduledAt: DateTime.utc(2026, 7, 10, 9, 30),
+      notes: 'Pickup at the north entrance.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'gig-2',
+      origin: 'Barcelona Sants',
+      destination: 'Valencia Port',
+      scheduledAt: DateTime.utc(2026, 7, 12, 15),
+      notes: 'Bring parking ticket.',
+      status: 'available',
+    ),
+  ];
 }
 
 class DriverGig {
@@ -61,6 +108,19 @@ class DriverGig {
   }
 }
 
+class DriverSession {
+  const DriverSession({required this.userId, this.email});
+
+  final String userId;
+  final String? email;
+}
+
+abstract interface class DriverAuthService {
+  Future<DriverSession?> currentSession();
+  Future<void> signInWithGoogle();
+  Future<void> signOut();
+}
+
 abstract interface class DriverGigService {
   Future<List<DriverGig>> listAvailableGigs();
   Future<List<DriverGig>> listBookedGigs(String driverId);
@@ -70,6 +130,128 @@ abstract interface class DriverGigService {
   });
 }
 
+typedef DriverGigServiceFactory = DriverGigService Function(
+  DriverSession session,
+);
+
+class DriverShell extends StatefulWidget {
+  const DriverShell({
+    required this.authService,
+    required this.createGigService,
+    super.key,
+  });
+
+  final DriverAuthService authService;
+  final DriverGigServiceFactory createGigService;
+
+  @override
+  State<DriverShell> createState() => _DriverShellState();
+}
+
+class _DriverShellState extends State<DriverShell> {
+  late Future<DriverSession?> _session;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _session = widget.authService.currentSession();
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _errorMessage = null;
+    });
+
+    try {
+      await widget.authService.signInWithGoogle();
+      setState(() {
+        _session = widget.authService.currentSession();
+      });
+    } catch (error) {
+      setState(() {
+        _errorMessage = error is Error
+            ? error.toString().replaceFirst('Bad state: ', '')
+            : 'Unable to sign in.';
+      });
+    }
+  }
+
+  Future<void> _signOut() async {
+    await widget.authService.signOut();
+    setState(() {
+      _session = widget.authService.currentSession();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DriverSession?>(
+      future: _session,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final session = snapshot.data;
+
+        if (session == null) {
+          return Scaffold(
+            backgroundColor: const Color(0xfff6f7f9),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Driver sign-in',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _signInWithGoogle,
+                      child: const Text('Sign in with Google'),
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(_errorMessage!),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Stack(
+          children: [
+            DriverApp(
+              driverId: session.userId,
+              service: widget.createGigService(session),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: SafeArea(
+                child: TextButton(
+                  onPressed: _signOut,
+                  child: const Text('Sign out'),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class InMemoryDriverGigService implements DriverGigService {
   InMemoryDriverGigService(this._gigs);
 
@@ -77,9 +259,7 @@ class InMemoryDriverGigService implements DriverGigService {
 
   @override
   Future<List<DriverGig>> listAvailableGigs() async {
-    final available = _gigs
-        .where((gig) => gig.status == 'available')
-        .toList()
+    final available = _gigs.where((gig) => gig.status == 'available').toList()
       ..sort((left, right) => left.scheduledAt.compareTo(right.scheduledAt));
 
     return available;
@@ -116,6 +296,128 @@ class InMemoryDriverGigService implements DriverGigService {
     _gigs[index] = booked;
 
     return booked;
+  }
+}
+
+class InMemoryDriverAuthService implements DriverAuthService {
+  InMemoryDriverAuthService(this._session);
+
+  DriverSession? _session;
+
+  @override
+  Future<DriverSession?> currentSession() async => _session;
+
+  @override
+  Future<void> signInWithGoogle() async {
+    _session ??= const DriverSession(userId: 'demo-driver');
+  }
+
+  @override
+  Future<void> signOut() async {
+    _session = null;
+  }
+}
+
+class SupabaseDriverAuthService implements DriverAuthService {
+  SupabaseDriverAuthService(this._client, {required this.redirectTo});
+
+  final SupabaseClient _client;
+  final String redirectTo;
+
+  @override
+  Future<DriverSession?> currentSession() async {
+    final session = _client.auth.currentSession;
+
+    if (session == null) {
+      return null;
+    }
+
+    return DriverSession(
+      userId: session.user.id,
+      email: session.user.email,
+    );
+  }
+
+  @override
+  Future<void> signInWithGoogle() async {
+    await _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: redirectTo.isEmpty ? null : redirectTo,
+    );
+  }
+
+  @override
+  Future<void> signOut() async {
+    await _client.auth.signOut();
+  }
+}
+
+class SupabaseDriverGigService implements DriverGigService {
+  SupabaseDriverGigService(this._client);
+
+  final SupabaseClient _client;
+
+  @override
+  Future<List<DriverGig>> listAvailableGigs() async {
+    final rows = await _client
+        .from('relocation_requests')
+        .select(_columns)
+        .eq('status', 'available')
+        .order('scheduled_at');
+
+    return _mapRows(rows);
+  }
+
+  @override
+  Future<List<DriverGig>> listBookedGigs(String driverId) async {
+    final rows = await _client
+        .from('relocation_requests')
+        .select(_columns)
+        .eq('status', 'booked')
+        .eq('driver_id', driverId)
+        .order('scheduled_at');
+
+    return _mapRows(rows);
+  }
+
+  @override
+  Future<DriverGig> bookGig({
+    required String requestId,
+    required String driverId,
+  }) async {
+    final row = await _client
+        .from('relocation_requests')
+        .update({
+          'status': 'booked',
+          'driver_id': driverId,
+        })
+        .eq('id', requestId)
+        .eq('status', 'available')
+        .select(_columns)
+        .single();
+
+    return _mapRow(row);
+  }
+
+  static const _columns =
+      'id,origin,destination,scheduled_at,notes,status,driver_id';
+
+  List<DriverGig> _mapRows(Object rows) {
+    return (rows as List<Object?>)
+        .map((row) => _mapRow(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  DriverGig _mapRow(Map<String, dynamic> row) {
+    return DriverGig(
+      id: row['id'] as String,
+      origin: row['origin'] as String,
+      destination: row['destination'] as String,
+      scheduledAt: DateTime.parse(row['scheduled_at'] as String).toUtc(),
+      notes: row['notes'] as String? ?? '',
+      status: row['status'] as String,
+      driverId: row['driver_id'] as String?,
+    );
   }
 }
 

@@ -94,8 +94,22 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 7
 
+## Slice 8 - Driver Supabase Auth And Data
+
+- [x] Confirm Slice 8 scope: driver Flutter app runtime wiring only
+- [x] Keep in-memory driver services for tests and local fallback
+- [x] Add Flutter `--dart-define` runtime configuration
+- [x] Add Supabase Flutter dependency and initialization
+- [x] Add driver auth boundary for session, Google sign-in, and sign-out
+- [x] Add Supabase driver gig service for available, booked, and booking flows
+- [x] RED/GREEN: signed-out Google sign-in state
+- [x] RED/GREEN: signed-in available/booked gigs state
+- [x] RED/GREEN: booking refresh and error behavior with fakes
+- [x] Update `.env.example` with driver build variables
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 8
+
 ## Later Slices
 
 - [ ] Supabase realtime integration
-- [ ] Wire driver Flutter app to real Supabase data
 - [ ] Deployment and public demo URLs

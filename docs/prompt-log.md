@@ -238,3 +238,32 @@ Delivery:
 - Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 4 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
+## 2026-07-08 - Slice 8
+
+Prompt: wire the driver Flutter app to real Supabase auth and data so a signed-in driver can list available gigs, book one, and see booked gigs.
+
+Constraints:
+
+- Keep in-memory driver services for tests and local fallback.
+- Use Flutter `--dart-define` runtime configuration and do not commit secrets.
+- Add Supabase Flutter initialization, auth, and data adapters behind app-level boundaries.
+- Keep tests network-free with fake auth/gig services.
+- Do not change dispatcher UI, add realtime, or add completed/cancelled statuses.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added `supabase_flutter` to the driver app and updated `pubspec.lock`.
+- Added `DriverRuntimeConfig.fromEnvironment()` using the required dart-defines: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_OAUTH_REDIRECT_URL`.
+- Added Supabase initialization only when `SUPABASE_URL` and `SUPABASE_ANON_KEY` are present; otherwise the driver app keeps the in-memory local fallback.
+- Added `DriverAuthService` and `DriverSession` boundaries with `SupabaseDriverAuthService` for current session, Google OAuth sign-in, and sign-out.
+- Added `SupabaseDriverGigService` over `relocation_requests`: available gigs query filters `status = available`, booked gigs query filters `status = booked` and `driver_id = current driver id`, and booking uses an atomic update filtered by `id` and `status = available` while writing `status = booked` and `driver_id`.
+- Added `DriverShell` to show a signed-out Google sign-in state and signed-in available/booked gigs state.
+- Kept Flutter tests network-free with fake auth/gig services and added coverage for signed-out, signed-in, sign-out, booking refresh, and error behavior.
+- Updated `.env.example` with the driver `--dart-define` variable names and ignored generated `.flutter-plugins-dependencies`.
+- Verification: `npm test` passed with dispatcher 5 test files / 34 tests and core 2 test files / 21 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(115/115)`, 100% branches `(86/86)`, 100% functions `(37/37)`, 100% lines `(113/113)`. Core coverage: 100% statements `(60/60)`, 100% branches `(30/30)`, 100% functions `(24/24)`, 100% lines `(60/60)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 9 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
