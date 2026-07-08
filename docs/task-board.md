@@ -12,6 +12,18 @@
 - [x] Run tests and coverage
 - [x] Commit Slice 1
 
+## Slice 2 - Supabase Repository Adapter For Create And List
+
+- [x] Confirm Slice 2 scope: backend/core only, no Vue UI
+- [x] RED: add failing adapter tests with fake Supabase client
+- [x] GREEN: implement Supabase relocation request repository adapter
+- [x] Verify insert maps domain fields to `relocation_requests` snake_case columns
+- [x] Verify select rows map back to domain relocation requests
+- [x] Verify insert/select failures surface clearly
+- [x] Confirm migration compatibility
+- [x] Run tests, coverage, and typecheck
+- [x] Commit Slice 2
+
 ## Later Slices
 
 - [ ] Dispatcher edits and updates relocation requests
