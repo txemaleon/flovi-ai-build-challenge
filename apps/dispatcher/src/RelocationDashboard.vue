@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import type { RelocationRequest } from "@flovi/core";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import type { RelocationRequest, RelocationRequestStatus } from "@flovi/core";
 import type { DispatcherRelocationService } from "./services/dispatcherRelocationService.js";
 import type { DispatcherRealtimeService } from "./services/dispatcherRealtimeService.js";
 
@@ -17,7 +17,38 @@ const destination = ref("");
 const scheduledAt = ref("");
 const notes = ref("");
 const editingRequestId = ref<string | null>(null);
+const activeStatusFilter = ref<"all" | RelocationRequestStatus>("all");
 let unsubscribeFromRealtime: (() => void) | undefined;
+
+const statusFilters: Array<{
+  value: "all" | RelocationRequestStatus;
+  label: string;
+}> = [
+  { value: "all", label: "All" },
+  { value: "available", label: "Open" },
+  { value: "booked", label: "Booked" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" }
+];
+
+const statusCounts = computed(() =>
+  statusFilters.map((filter) => ({
+    ...filter,
+    count:
+      filter.value === "all"
+        ? requests.value.length
+        : requests.value.filter((request) => request.status === filter.value)
+            .length
+  }))
+);
+
+const filteredRequests = computed(() =>
+  activeStatusFilter.value === "all"
+    ? requests.value
+    : requests.value.filter(
+        (request) => request.status === activeStatusFilter.value
+      )
+);
 
 async function loadRequests() {
   isLoading.value = true;
@@ -99,12 +130,36 @@ function cancelEdit() {
   resetForm();
 }
 
+async function cancelRequest(request: RelocationRequest) {
+  errorMessage.value = "";
+
+  try {
+    await props.service.cancelRelocationRequest({ requestId: request.id });
+    await loadRequests();
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : "Unable to cancel relocation request.";
+  }
+}
+
 function resetForm() {
   editingRequestId.value = null;
   origin.value = "";
   destination.value = "";
   scheduledAt.value = "";
   notes.value = "";
+}
+
+function statusLabel(status: RelocationRequestStatus): string {
+  return status === "available" ? "Open" : statusFilters.find(
+    (filter) => filter.value === status
+  )!.label;
+}
+
+function canCancel(request: RelocationRequest): boolean {
+  return request.status === "available" || request.status === "booked";
 }
 
 onMounted(() => {
@@ -190,37 +245,66 @@ onUnmounted(() => {
         {{ errorMessage }}
       </p>
 
-      <p v-else-if="requests.length === 0" class="state-message">
-        No relocation requests yet.
-      </p>
-
-      <div v-else class="request-list">
-        <article
-          v-for="request in requests"
-          :key="request.id"
-          class="request-row"
-        >
-          <div>
-            <p class="route">
-              {{ request.origin }} <span>to</span> {{ request.destination }}
-            </p>
-            <p class="scheduled">
-              {{ formatScheduledAt(request.scheduledAt) }}
-            </p>
-          </div>
-          <span data-test="status" class="status-pill">
-            {{ request.status }}
-          </span>
+      <template v-else>
+        <div v-if="requests.length > 0" class="status-tools">
           <button
-            data-test="edit-request"
-            class="secondary-button"
+            v-for="filter in statusCounts"
+            :key="filter.value"
+            data-test="status-filter"
+            class="filter-button"
+            :class="{ 'filter-button-active': activeStatusFilter === filter.value }"
             type="button"
-            @click="editRequest(request)"
+            @click="activeStatusFilter = filter.value"
           >
-            Edit
+            <span data-test="status-summary">{{ filter.label }} {{ filter.count }}</span>
           </button>
-        </article>
-      </div>
+        </div>
+
+        <p v-if="requests.length === 0" class="state-message">
+          No relocation requests yet.
+        </p>
+
+        <p v-else-if="filteredRequests.length === 0" class="state-message">
+          No relocation requests match this status.
+        </p>
+
+        <div v-else class="request-list">
+          <article
+            v-for="request in filteredRequests"
+            :key="request.id"
+            class="request-row"
+        >
+            <div>
+              <p class="route">
+                {{ request.origin }} <span>to</span> {{ request.destination }}
+              </p>
+              <p class="scheduled">
+                {{ formatScheduledAt(request.scheduledAt) }}
+              </p>
+            </div>
+            <span data-test="status" class="status-pill">
+              {{ statusLabel(request.status) }}
+            </span>
+            <button
+              data-test="edit-request"
+              class="secondary-button"
+              type="button"
+              @click="editRequest(request)"
+            >
+              Edit
+            </button>
+            <button
+              v-if="canCancel(request)"
+              data-test="cancel-request"
+              class="secondary-button"
+              type="button"
+              @click="cancelRequest(request)"
+            >
+              Cancel
+            </button>
+          </article>
+        </div>
+      </template>
     </section>
   </main>
 </template>
@@ -366,6 +450,31 @@ textarea {
 
 .state-message-error {
   color: #a33d3d;
+}
+
+.status-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.filter-button {
+  background: #eef2f7;
+  border: 0;
+  border-radius: 999px;
+  color: #334155;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.filter-button-active {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .request-list {

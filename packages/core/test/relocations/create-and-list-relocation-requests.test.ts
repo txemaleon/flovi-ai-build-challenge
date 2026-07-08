@@ -2,10 +2,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   InMemoryRelocationRequestRepository,
   bookRelocationGig,
+  cancelRelocationRequest,
+  completeRelocationGig,
   createRelocationRequest,
   listDriverAvailableRelocationGigs,
   listDriverBookedRelocationGigs,
+  listDriverCompletedRelocationGigs,
   listRelocationRequests,
+  relocationRequestStatuses,
   updateRelocationRequest
 } from "../../src/relocations/index.js";
 
@@ -41,6 +45,15 @@ describe("dispatcher relocation request workflow", () => {
     await expect(
       listRelocationRequests({ relocationRequests })
     ).resolves.toEqual([created]);
+  });
+
+  it("defines the public relocation lifecycle statuses", () => {
+    expect(relocationRequestStatuses).toEqual([
+      "available",
+      "booked",
+      "completed",
+      "cancelled"
+    ]);
   });
 
   it("accepts an injected id generator and defaults missing notes", async () => {
@@ -276,6 +289,35 @@ describe("dispatcher relocation request workflow", () => {
     ).resolves.toEqual([]);
   });
 
+  it("cancels an open relocation request through the application boundary", async () => {
+    const relocationRequests = new InMemoryRelocationRequestRepository();
+    const created = await createRelocationRequest(
+      {
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z"
+      },
+      {
+        relocationRequests,
+        generateId: () => "request-123"
+      }
+    );
+
+    const cancelled = await cancelRelocationRequest(
+      { requestId: created.id },
+      { relocationRequests }
+    );
+
+    expect(cancelled).toEqual({
+      ...created,
+      status: "cancelled"
+    });
+    await expect(
+      listDriverAvailableRelocationGigs({ relocationRequests })
+    ).resolves.toEqual([]);
+  });
+
   it("fails clearly when booking a missing relocation gig", async () => {
     await expect(
       bookRelocationGig(
@@ -319,6 +361,43 @@ describe("dispatcher relocation request workflow", () => {
         { relocationRequests }
       )
     ).rejects.toThrow("Relocation request is not available.");
+  });
+
+  it("fails clearly when cancelling a missing relocation request", async () => {
+    await expect(
+      cancelRelocationRequest(
+        { requestId: "request-missing" },
+        { relocationRequests: new InMemoryRelocationRequestRepository() }
+      )
+    ).rejects.toThrow("Relocation request not found.");
+  });
+
+  it("fails clearly when cancelling a completed relocation request", async () => {
+    const relocationRequests = new InMemoryRelocationRequestRepository();
+    const created = await createRelocationRequest(
+      {
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z"
+      },
+      {
+        relocationRequests,
+        generateId: () => "request-123"
+      }
+    );
+    await bookRelocationGig(
+      { requestId: created.id, driverId: "driver-456" },
+      { relocationRequests }
+    );
+    await completeRelocationGig(
+      { requestId: created.id, driverId: "driver-456" },
+      { relocationRequests }
+    );
+
+    await expect(
+      cancelRelocationRequest({ requestId: created.id }, { relocationRequests })
+    ).rejects.toThrow("Relocation request cannot be cancelled.");
   });
 
   it("lists booked relocation gigs for a driver sorted by scheduled time", async () => {
@@ -389,5 +468,137 @@ describe("dispatcher relocation request workflow", () => {
         driverId: "driver-456"
       }
     ]);
+  });
+
+  it("completes a booked relocation gig and lists it for that driver", async () => {
+    const relocationRequests = new InMemoryRelocationRequestRepository();
+    const created = await createRelocationRequest(
+      {
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z"
+      },
+      {
+        relocationRequests,
+        generateId: () => "request-123"
+      }
+    );
+    await bookRelocationGig(
+      {
+        requestId: created.id,
+        driverId: "driver-456"
+      },
+      { relocationRequests }
+    );
+
+    const completed = await completeRelocationGig(
+      {
+        requestId: created.id,
+        driverId: "driver-456"
+      },
+      { relocationRequests }
+    );
+
+    expect(completed).toEqual({
+      ...created,
+      status: "completed",
+      driverId: "driver-456"
+    });
+    await expect(
+      listDriverBookedRelocationGigs(
+        { driverId: "driver-456" },
+        { relocationRequests }
+      )
+    ).resolves.toEqual([]);
+    await expect(
+      listDriverCompletedRelocationGigs(
+        { driverId: "driver-456" },
+        { relocationRequests }
+      )
+    ).resolves.toEqual([completed]);
+  });
+
+  it("lists completed relocation gigs for a driver sorted by scheduled time", async () => {
+    const relocationRequests = new InMemoryRelocationRequestRepository();
+    const later = await createRelocationRequest(
+      {
+        dispatcherId: "dispatcher-123",
+        origin: "Barcelona Sants",
+        destination: "Valencia Port",
+        scheduledAt: "2026-07-12T15:00:00.000Z"
+      },
+      {
+        relocationRequests,
+        generateId: () => "request-later"
+      }
+    );
+    const earlier = await createRelocationRequest(
+      {
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Chamartin",
+        destination: "Seville Station",
+        scheduledAt: "2026-07-10T09:30:00.000Z"
+      },
+      {
+        relocationRequests,
+        generateId: () => "request-earlier"
+      }
+    );
+    await bookRelocationGig(
+      { requestId: later.id, driverId: "driver-456" },
+      { relocationRequests }
+    );
+    await bookRelocationGig(
+      { requestId: earlier.id, driverId: "driver-456" },
+      { relocationRequests }
+    );
+    const completedLater = await completeRelocationGig(
+      { requestId: later.id, driverId: "driver-456" },
+      { relocationRequests }
+    );
+    const completedEarlier = await completeRelocationGig(
+      { requestId: earlier.id, driverId: "driver-456" },
+      { relocationRequests }
+    );
+
+    await expect(
+      listDriverCompletedRelocationGigs(
+        { driverId: "driver-456" },
+        { relocationRequests }
+      )
+    ).resolves.toEqual([completedEarlier, completedLater]);
+  });
+
+  it("fails clearly when completing a missing relocation request", async () => {
+    await expect(
+      completeRelocationGig(
+        { requestId: "request-missing", driverId: "driver-456" },
+        { relocationRequests: new InMemoryRelocationRequestRepository() }
+      )
+    ).rejects.toThrow("Relocation request not found.");
+  });
+
+  it("fails clearly when completing a gig not booked for the driver", async () => {
+    const relocationRequests = new InMemoryRelocationRequestRepository();
+    const created = await createRelocationRequest(
+      {
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z"
+      },
+      {
+        relocationRequests,
+        generateId: () => "request-123"
+      }
+    );
+
+    await expect(
+      completeRelocationGig(
+        { requestId: created.id, driverId: "driver-456" },
+        { relocationRequests }
+      )
+    ).rejects.toThrow("Relocation request is not booked for this driver.");
   });
 });

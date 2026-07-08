@@ -61,4 +61,49 @@ export class InMemoryRelocationRequestRepository
 
     return booked;
   }
+
+  async cancelOpenOrBooked(requestId: string): Promise<RelocationRequest> {
+    const existing = this.requests.get(requestId);
+
+    if (!existing) {
+      throw new Error("Relocation request not found.");
+    }
+
+    if (existing.status !== "available" && existing.status !== "booked") {
+      throw new Error("Relocation request cannot be cancelled.");
+    }
+
+    const cancelled: RelocationRequest = {
+      ...existing,
+      status: "cancelled"
+    };
+
+    this.requests.set(cancelled.id, cancelled);
+
+    return cancelled;
+  }
+
+  async completeBooked(
+    requestId: string,
+    driverId: string
+  ): Promise<RelocationRequest> {
+    const existing = this.requests.get(requestId);
+
+    if (!existing) {
+      throw new Error("Relocation request not found.");
+    }
+
+    if (existing.status !== "booked" || existing.driverId !== driverId) {
+      throw new Error("Relocation request is not booked for this driver.");
+    }
+
+    const completed: RelocationRequest = {
+      ...existing,
+      status: "completed"
+    };
+
+    this.requests.set(completed.id, completed);
+
+    return completed;
+  }
 }

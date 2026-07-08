@@ -33,8 +33,12 @@ export type SupabaseRelocationRequestClient = Readonly<{
 
 type SupabaseRelocationRequestUpdate = {
   eq(
-    column: "id" | "status",
+    column: "driver_id" | "id" | "status",
     value: string
+  ): SupabaseRelocationRequestUpdate;
+  in(
+    column: "status",
+    values: readonly RelocationRequestStatus[]
   ): SupabaseRelocationRequestUpdate;
   select(columns?: string): {
     single(): PromiseLike<{
@@ -65,6 +69,9 @@ type RelocationRequestUpdateRow =
   | Readonly<{
       status: "booked";
       driver_id: string;
+    }>
+  | Readonly<{
+      status: "cancelled" | "completed";
     }>;
 
 const relocationRequestColumns =
@@ -136,6 +143,42 @@ export class SupabaseRelocationRequestRepository
 
     if (result.error || !result.data) {
       throw new Error("Relocation request is not available.");
+    }
+
+    return toRelocationRequest(result.data);
+  }
+
+  async cancelOpenOrBooked(requestId: string): Promise<RelocationRequest> {
+    const result = await this.supabase
+      .from("relocation_requests")
+      .update({ status: "cancelled" })
+      .eq("id", requestId)
+      .in("status", ["available", "booked"])
+      .select(relocationRequestColumns)
+      .single();
+
+    if (result.error || !result.data) {
+      throw new Error("Relocation request cannot be cancelled.");
+    }
+
+    return toRelocationRequest(result.data);
+  }
+
+  async completeBooked(
+    requestId: string,
+    driverId: string
+  ): Promise<RelocationRequest> {
+    const result = await this.supabase
+      .from("relocation_requests")
+      .update({ status: "completed" })
+      .eq("id", requestId)
+      .eq("driver_id", driverId)
+      .eq("status", "booked")
+      .select(relocationRequestColumns)
+      .single();
+
+    if (result.error || !result.data) {
+      throw new Error("Relocation request is not booked for this driver.");
     }
 
     return toRelocationRequest(result.data);

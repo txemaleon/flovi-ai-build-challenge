@@ -131,6 +131,18 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 10
 
+## Slice 11 - Relocation Lifecycle States
+
+- [x] Confirm Slice 11 scope: lifecycle states only, no deployment work
+- [x] RED/GREEN: extend core status model and list filtering
+- [x] RED/GREEN: add dispatcher cancel transition
+- [x] RED/GREEN: add driver complete transition and completed list
+- [x] RED/GREEN: add Supabase transition mapping and migrations
+- [x] RED/GREEN: add dispatcher status summary and filters
+- [x] RED/GREEN: add driver completed section and complete action
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 11
+
 ## Later Slices
 
 - [ ] Deployment and public demo URLs

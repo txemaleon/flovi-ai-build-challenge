@@ -14,6 +14,9 @@ function createService(
     },
     updateRelocationRequest: async () => {
       throw new Error("update is not used in this test");
+    },
+    cancelRelocationRequest: async () => {
+      throw new Error("cancel is not used in this test");
     }
   };
 }
@@ -68,7 +71,105 @@ describe("RelocationDashboard", () => {
     expect(wrapper.text()).toContain("Madrid Airport");
     expect(wrapper.text()).toContain("Barcelona Sants");
     expect(wrapper.text()).toContain("Jul 9, 2026, 09:30");
-    expect(wrapper.find('[data-test="status"]').text()).toBe("available");
+    expect(wrapper.find('[data-test="status"]').text()).toBe("Open");
+  });
+
+  it("shows lifecycle counts and filters requests by status", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([
+          {
+            id: "request-open",
+            dispatcherId: "dispatcher-1",
+            origin: "Madrid Airport",
+            destination: "Barcelona Sants",
+            scheduledAt: "2026-07-09T09:30:00.000Z",
+            notes: "",
+            status: "available"
+          },
+          {
+            id: "request-booked",
+            dispatcherId: "dispatcher-1",
+            origin: "Valencia Port",
+            destination: "Madrid Chamartin",
+            scheduledAt: "2026-07-10T15:00:00.000Z",
+            notes: "",
+            status: "booked",
+            driverId: "driver-1"
+          },
+          {
+            id: "request-completed",
+            dispatcherId: "dispatcher-1",
+            origin: "Seville Station",
+            destination: "Malaga Airport",
+            scheduledAt: "2026-07-11T12:00:00.000Z",
+            notes: "",
+            status: "completed",
+            driverId: "driver-1"
+          },
+          {
+            id: "request-cancelled",
+            dispatcherId: "dispatcher-1",
+            origin: "Bilbao Depot",
+            destination: "San Sebastian",
+            scheduledAt: "2026-07-12T08:15:00.000Z",
+            notes: "",
+            status: "cancelled"
+          }
+        ])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+
+    const summaries = wrapper
+      .findAll('[data-test="status-summary"]')
+      .map((summary) => summary.text());
+    expect(summaries).toEqual([
+      "All 4",
+      "Open 1",
+      "Booked 1",
+      "Completed 1",
+      "Cancelled 1"
+    ]);
+    expect(wrapper.findAll('[data-test="status"]').map((status) => status.text()))
+      .toEqual(["Open", "Booked", "Completed", "Cancelled"]);
+
+    await wrapper
+      .findAll('[data-test="status-filter"]')
+      .find((button) => button.text().startsWith("Completed"))
+      ?.trigger("click");
+
+    expect(wrapper.text()).toContain("Seville Station");
+    expect(wrapper.text()).not.toContain("Madrid Airport");
+    expect(wrapper.text()).not.toContain("Valencia Port");
+    expect(wrapper.text()).not.toContain("Bilbao Depot");
+  });
+
+  it("shows an empty filtered state when a status has no requests", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([
+          {
+            id: "request-open",
+            dispatcherId: "dispatcher-1",
+            origin: "Madrid Airport",
+            destination: "Barcelona Sants",
+            scheduledAt: "2026-07-09T09:30:00.000Z",
+            notes: "",
+            status: "available"
+          }
+        ])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper
+      .findAll('[data-test="status-filter"]')
+      .find((button) => button.text().startsWith("Cancelled"))
+      ?.trigger("click");
+
+    expect(wrapper.text()).toContain("No relocation requests match this status.");
   });
 
   it("shows loading and empty states while requests are fetched", async () => {
@@ -85,6 +186,9 @@ describe("RelocationDashboard", () => {
           },
           updateRelocationRequest: async () => {
             throw new Error("update is not used in this test");
+          },
+          cancelRelocationRequest: async () => {
+            throw new Error("cancel is not used in this test");
           }
         }
       }
@@ -96,6 +200,18 @@ describe("RelocationDashboard", () => {
 
     resolveRequests([]);
     await vi.dynamicImportSettled();
+
+    expect(wrapper.text()).toContain("No relocation requests yet.");
+  });
+
+  it("shows an empty state when no requests exist", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
 
     expect(wrapper.text()).toContain("No relocation requests yet.");
   });
@@ -112,6 +228,9 @@ describe("RelocationDashboard", () => {
           },
           updateRelocationRequest: async () => {
             throw new Error("update is not used in this test");
+          },
+          cancelRelocationRequest: async () => {
+            throw new Error("cancel is not used in this test");
           }
         }
       }
@@ -134,6 +253,9 @@ describe("RelocationDashboard", () => {
           },
           updateRelocationRequest: async () => {
             throw new Error("update is not used in this test");
+          },
+          cancelRelocationRequest: async () => {
+            throw new Error("cancel is not used in this test");
           }
         }
       }
@@ -168,6 +290,9 @@ describe("RelocationDashboard", () => {
           },
           updateRelocationRequest: async () => {
             throw new Error("update is not used in this test");
+          },
+          cancelRelocationRequest: async () => {
+            throw new Error("cancel is not used in this test");
           }
         }
       }
@@ -263,6 +388,9 @@ describe("RelocationDashboard", () => {
             };
             requests.splice(0, requests.length, updated);
             return updated;
+          },
+          cancelRelocationRequest: async () => {
+            throw new Error("cancel is not used in this test");
           }
         }
       }
@@ -355,6 +483,100 @@ describe("RelocationDashboard", () => {
     expect(wrapper.text()).toContain("Unable to update relocation request.");
   });
 
+  it("cancels an open relocation request and refreshes the visible list", async () => {
+    const requests: RelocationRequest[] = [
+      {
+        id: "request-1",
+        dispatcherId: "dispatcher-1",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z",
+        notes: "Vehicle is parked in short stay.",
+        status: "available"
+      }
+    ];
+    const cancelInputs: unknown[] = [];
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: {
+          ...createService(requests),
+          cancelRelocationRequest: async (input) => {
+            cancelInputs.push(input);
+            const cancelled: RelocationRequest = {
+              ...requests[0],
+              status: "cancelled"
+            };
+            requests.splice(0, requests.length, cancelled);
+            return cancelled;
+          }
+        }
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="cancel-request"]').trigger("click");
+
+    expect(cancelInputs).toEqual([{ requestId: "request-1" }]);
+    expect(wrapper.find('[data-test="status"]').text()).toBe("Cancelled");
+  });
+
+  it("shows a clear message when cancel fails", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: {
+          ...createService([
+            {
+              id: "request-1",
+              dispatcherId: "dispatcher-1",
+              origin: "Madrid Airport",
+              destination: "Barcelona Sants",
+              scheduledAt: "2026-07-09T09:30:00.000Z",
+              notes: "Vehicle is parked in short stay.",
+              status: "booked",
+              driverId: "driver-1"
+            }
+          ]),
+          cancelRelocationRequest: async () => {
+            throw new Error("Unable to cancel relocation request.");
+          }
+        }
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="cancel-request"]').trigger("click");
+
+    expect(wrapper.text()).toContain("Unable to cancel relocation request.");
+  });
+
+  it("shows a fallback message when cancel rejects without an Error", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: {
+          ...createService([
+            {
+              id: "request-1",
+              dispatcherId: "dispatcher-1",
+              origin: "Madrid Airport",
+              destination: "Barcelona Sants",
+              scheduledAt: "2026-07-09T09:30:00.000Z",
+              notes: "Vehicle is parked in short stay.",
+              status: "available"
+            }
+          ]),
+          cancelRelocationRequest: async () => {
+            throw "offline";
+          }
+        }
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="cancel-request"]').trigger("click");
+
+    expect(wrapper.text()).toContain("Unable to cancel relocation request.");
+  });
+
   it("shows a fallback message when saving rejects without an Error", async () => {
     const wrapper = mount(RelocationDashboard, {
       props: {
@@ -365,6 +587,9 @@ describe("RelocationDashboard", () => {
           },
           updateRelocationRequest: async () => {
             throw new Error("update is not used in this test");
+          },
+          cancelRelocationRequest: async () => {
+            throw new Error("cancel is not used in this test");
           }
         }
       }

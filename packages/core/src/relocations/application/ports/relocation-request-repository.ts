@@ -6,4 +6,6 @@ export interface RelocationRequestRepository {
   list(): Promise<RelocationRequest[]>;
   update(request: UpdateRelocationRequestFields): Promise<RelocationRequest>;
   bookAvailable(requestId: string, driverId: string): Promise<RelocationRequest>;
+  cancelOpenOrBooked(requestId: string): Promise<RelocationRequest>;
+  completeBooked(requestId: string, driverId: string): Promise<RelocationRequest>;
 }

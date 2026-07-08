@@ -12,6 +12,10 @@ export type UpdateRelocationRequestInput = CreateRelocationRequestInput &
     id: string;
   }>;
 
+export type CancelRelocationRequestInput = Readonly<{
+  requestId: string;
+}>;
+
 export type DispatcherRelocationService = Readonly<{
   listRelocationRequests(): Promise<RelocationRequest[]>;
   createRelocationRequest(
@@ -19,5 +23,8 @@ export type DispatcherRelocationService = Readonly<{
   ): Promise<RelocationRequest>;
   updateRelocationRequest(
     input: UpdateRelocationRequestInput
+  ): Promise<RelocationRequest>;
+  cancelRelocationRequest(
+    input: CancelRelocationRequestInput
   ): Promise<RelocationRequest>;
 }>;

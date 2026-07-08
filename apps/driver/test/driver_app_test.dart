@@ -55,6 +55,32 @@ void main() {
     );
   });
 
+  test('in-memory driver gig service completes one booked gig', () async {
+    final service = InMemoryDriverGigService([
+      DriverGig(
+        id: 'gig-booked',
+        origin: 'Madrid Chamartin',
+        destination: 'Seville Station',
+        scheduledAt: DateTime.utc(2026, 7, 10, 9, 30),
+        notes: 'Booked request',
+        status: 'booked',
+        driverId: 'driver-1',
+      ),
+    ]);
+
+    final completed = await service.completeGig(
+      requestId: 'gig-booked',
+      driverId: 'driver-1',
+    );
+
+    expect(completed.status, 'completed');
+    expect(await service.listBookedGigs('driver-1'), isEmpty);
+    expect(
+      (await service.listCompletedGigs('driver-1')).map((gig) => gig.id),
+      ['gig-booked'],
+    );
+  });
+
   testWidgets('driver app renders available gigs sorted by scheduled time', (
     tester,
   ) async {
@@ -127,6 +153,44 @@ void main() {
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('booked-gigs')),
+        matching: find.text('Madrid Chamartin to Seville Station'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('driver completes a booked gig and sees it in the completed list',
+      (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverApp(
+          driverId: 'driver-1',
+          service: InMemoryDriverGigService([
+            DriverGig(
+              id: 'gig-booked',
+              origin: 'Madrid Chamartin',
+              destination: 'Seville Station',
+              scheduledAt: DateTime.utc(2026, 7, 10, 9, 30),
+              notes: 'Booked request',
+              status: 'booked',
+              driverId: 'driver-1',
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Complete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No booked gigs yet.'), findsOneWidget);
+    expect(find.text('Completed gigs'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('completed-gigs')),
         matching: find.text('Madrid Chamartin to Seville Station'),
       ),
       findsOneWidget,
@@ -347,7 +411,18 @@ class FailingDriverGigService implements DriverGigService {
   Future<List<DriverGig>> listBookedGigs(String driverId) async => [];
 
   @override
+  Future<List<DriverGig>> listCompletedGigs(String driverId) async => [];
+
+  @override
   Future<DriverGig> bookGig({
+    required String requestId,
+    required String driverId,
+  }) async {
+    throw StateError('database unavailable');
+  }
+
+  @override
+  Future<DriverGig> completeGig({
     required String requestId,
     required String driverId,
   }) async {

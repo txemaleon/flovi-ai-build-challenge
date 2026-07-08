@@ -1,4 +1,5 @@
 import {
+  cancelRelocationRequest,
   createRelocationRequest,
   listRelocationRequests,
   updateRelocationRequest,
@@ -42,6 +43,15 @@ export function createDispatcherRelocationService(
           destination: input.destination,
           scheduledAt: input.scheduledAt,
           notes: input.notes
+        },
+        {
+          relocationRequests: options.relocationRequests
+        }
+      ),
+    cancelRelocationRequest: (input) =>
+      cancelRelocationRequest(
+        {
+          requestId: input.requestId
         },
         {
           relocationRequests: options.relocationRequests

@@ -29,6 +29,9 @@ class FakeSupabaseClient {
   readonly updates: unknown[] = [];
   readonly updateFilters: Array<Readonly<{ column: string; value: unknown }>> =
     [];
+  readonly updateInFilters: Array<
+    Readonly<{ column: string; values: readonly unknown[] }>
+  > = [];
   readonly selectedColumns: string[] = [];
   readonly orderedBy: Array<Readonly<{ column: string; ascending: boolean }>> =
     [];
@@ -54,6 +57,11 @@ class FakeSupabaseClient {
         const updateFilter = {
           eq: (column: string, value: unknown) => {
             this.updateFilters.push({ column, value });
+
+            return updateFilter;
+          },
+          in: (column: string, values: readonly unknown[]) => {
+            this.updateInFilters.push({ column, values });
 
             return updateFilter;
           },
@@ -343,6 +351,121 @@ describe("SupabaseRelocationRequestRepository", () => {
     await expect(
       repository.bookAvailable("request-123", "driver-456")
     ).rejects.toThrow("Relocation request is not available.");
+  });
+
+  it("cancels an open or booked relocation request atomically in Supabase", async () => {
+    const supabase = new FakeSupabaseClient(
+      { error: null },
+      { data: [], error: null },
+      {
+        data: [
+          {
+            id: "request-123",
+            dispatcher_id: "dispatcher-123",
+            origin: "Madrid Airport",
+            destination: "Barcelona Sants",
+            scheduled_at: "2026-07-09T09:30:00.000Z",
+            notes: "Vehicle is parked in short stay.",
+            status: "cancelled",
+            driver_id: "driver-456"
+          }
+        ],
+        error: null
+      }
+    );
+    const repository = new SupabaseRelocationRequestRepository(supabase);
+
+    await expect(repository.cancelOpenOrBooked("request-123")).resolves.toEqual({
+      id: "request-123",
+      dispatcherId: "dispatcher-123",
+      origin: "Madrid Airport",
+      destination: "Barcelona Sants",
+      scheduledAt: "2026-07-09T09:30:00.000Z",
+      notes: "Vehicle is parked in short stay.",
+      status: "cancelled",
+      driverId: "driver-456"
+    });
+    expect(supabase.updates).toEqual([{ status: "cancelled" }]);
+    expect(supabase.updateFilters).toEqual([
+      { column: "id", value: "request-123" }
+    ]);
+    expect(supabase.updateInFilters).toEqual([
+      { column: "status", values: ["available", "booked"] }
+    ]);
+  });
+
+  it("completes a booked relocation request for a driver atomically in Supabase", async () => {
+    const supabase = new FakeSupabaseClient(
+      { error: null },
+      { data: [], error: null },
+      {
+        data: [
+          {
+            id: "request-123",
+            dispatcher_id: "dispatcher-123",
+            origin: "Madrid Airport",
+            destination: "Barcelona Sants",
+            scheduled_at: "2026-07-09T09:30:00.000Z",
+            notes: "Vehicle is parked in short stay.",
+            status: "completed",
+            driver_id: "driver-456"
+          }
+        ],
+        error: null
+      }
+    );
+    const repository = new SupabaseRelocationRequestRepository(supabase);
+
+    await expect(
+      repository.completeBooked("request-123", "driver-456")
+    ).resolves.toEqual({
+      id: "request-123",
+      dispatcherId: "dispatcher-123",
+      origin: "Madrid Airport",
+      destination: "Barcelona Sants",
+      scheduledAt: "2026-07-09T09:30:00.000Z",
+      notes: "Vehicle is parked in short stay.",
+      status: "completed",
+      driverId: "driver-456"
+    });
+    expect(supabase.updates).toEqual([{ status: "completed" }]);
+    expect(supabase.updateFilters).toEqual([
+      { column: "id", value: "request-123" },
+      { column: "driver_id", value: "driver-456" },
+      { column: "status", value: "booked" }
+    ]);
+  });
+
+  it("surfaces unavailable Supabase cancellation attempts clearly", async () => {
+    const supabase = new FakeSupabaseClient(
+      { error: null },
+      { data: [], error: null },
+      {
+        data: [],
+        error: { message: "no rows returned" }
+      }
+    );
+    const repository = new SupabaseRelocationRequestRepository(supabase);
+
+    await expect(repository.cancelOpenOrBooked("request-123")).rejects.toThrow(
+      "Relocation request cannot be cancelled."
+    );
+  });
+
+  it("surfaces unavailable Supabase completion attempts clearly", async () => {
+    const supabase = new FakeSupabaseClient(
+      { error: null },
+      { data: [], error: null },
+      {
+        data: [],
+        error: { message: "no rows returned" }
+      }
+    );
+    const repository = new SupabaseRelocationRequestRepository(supabase);
+
+    await expect(
+      repository.completeBooked("request-123", "driver-456")
+    ).rejects.toThrow("Relocation request is not booked for this driver.");
   });
 
   it("surfaces Supabase update failures clearly", async () => {

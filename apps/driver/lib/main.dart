@@ -76,6 +76,32 @@ List<DriverGig> seedDriverGigs() {
       destination: 'Valencia Port',
       scheduledAt: DateTime.utc(2026, 7, 12, 15),
       notes: 'Bring parking ticket.',
+      status: 'booked',
+      driverId: 'demo-driver',
+    ),
+    DriverGig(
+      id: 'gig-3',
+      origin: 'Seville Station',
+      destination: 'Malaga Airport',
+      scheduledAt: DateTime.utc(2026, 7, 13, 11),
+      notes: 'Completed demo relocation.',
+      status: 'completed',
+      driverId: 'demo-driver',
+    ),
+    DriverGig(
+      id: 'gig-4',
+      origin: 'Bilbao Depot',
+      destination: 'San Sebastian',
+      scheduledAt: DateTime.utc(2026, 7, 14, 8, 15),
+      notes: 'Cancelled dispatcher request.',
+      status: 'cancelled',
+    ),
+    DriverGig(
+      id: 'gig-5',
+      origin: 'Valencia Port',
+      destination: 'Madrid Chamartin',
+      scheduledAt: DateTime.utc(2026, 7, 15, 10),
+      notes: 'Open relocation request.',
       status: 'available',
     ),
   ];
@@ -129,7 +155,12 @@ abstract interface class DriverAuthService {
 abstract interface class DriverGigService {
   Future<List<DriverGig>> listAvailableGigs();
   Future<List<DriverGig>> listBookedGigs(String driverId);
+  Future<List<DriverGig>> listCompletedGigs(String driverId);
   Future<DriverGig> bookGig({
+    required String requestId,
+    required String driverId,
+  });
+  Future<DriverGig> completeGig({
     required String requestId,
     required String driverId,
   });
@@ -292,6 +323,16 @@ class InMemoryDriverGigService implements DriverGigService {
   }
 
   @override
+  Future<List<DriverGig>> listCompletedGigs(String driverId) async {
+    final completed = _gigs
+        .where((gig) => gig.status == 'completed' && gig.driverId == driverId)
+        .toList()
+      ..sort((left, right) => left.scheduledAt.compareTo(right.scheduledAt));
+
+    return completed;
+  }
+
+  @override
   Future<DriverGig> bookGig({
     required String requestId,
     required String driverId,
@@ -312,6 +353,29 @@ class InMemoryDriverGigService implements DriverGigService {
     _gigs[index] = booked;
 
     return booked;
+  }
+
+  @override
+  Future<DriverGig> completeGig({
+    required String requestId,
+    required String driverId,
+  }) async {
+    final index = _gigs.indexWhere((gig) => gig.id == requestId);
+
+    if (index == -1) {
+      throw StateError('Relocation gig not found.');
+    }
+
+    final gig = _gigs[index];
+
+    if (gig.status != 'booked' || gig.driverId != driverId) {
+      throw StateError('Relocation gig is not booked for this driver.');
+    }
+
+    final completed = gig.copyWith(status: 'completed');
+    _gigs[index] = completed;
+
+    return completed;
   }
 }
 
@@ -397,6 +461,18 @@ class SupabaseDriverGigService implements DriverGigService {
   }
 
   @override
+  Future<List<DriverGig>> listCompletedGigs(String driverId) async {
+    final rows = await _client
+        .from('relocation_requests')
+        .select(_columns)
+        .eq('status', 'completed')
+        .eq('driver_id', driverId)
+        .order('scheduled_at');
+
+    return _mapRows(rows);
+  }
+
+  @override
   Future<DriverGig> bookGig({
     required String requestId,
     required String driverId,
@@ -409,6 +485,23 @@ class SupabaseDriverGigService implements DriverGigService {
         })
         .eq('id', requestId)
         .eq('status', 'available')
+        .select(_columns)
+        .single();
+
+    return _mapRow(row);
+  }
+
+  @override
+  Future<DriverGig> completeGig({
+    required String requestId,
+    required String driverId,
+  }) async {
+    final row = await _client
+        .from('relocation_requests')
+        .update({'status': 'completed'})
+        .eq('id', requestId)
+        .eq('driver_id', driverId)
+        .eq('status', 'booked')
         .select(_columns)
         .single();
 
@@ -491,12 +584,25 @@ class _DriverAppState extends State<DriverApp> {
   Future<DriverGigLists> _loadGigs() async {
     final available = await widget.service.listAvailableGigs();
     final booked = await widget.service.listBookedGigs(widget.driverId);
+    final completed = await widget.service.listCompletedGigs(widget.driverId);
 
-    return DriverGigLists(available: available, booked: booked);
+    return DriverGigLists(
+      available: available,
+      booked: booked,
+      completed: completed,
+    );
   }
 
   Future<void> _bookGig(DriverGig gig) async {
     await widget.service.bookGig(requestId: gig.id, driverId: widget.driverId);
+    _refresh();
+  }
+
+  Future<void> _completeGig(DriverGig gig) async {
+    await widget.service.completeGig(
+      requestId: gig.id,
+      driverId: widget.driverId,
+    );
     _refresh();
   }
 
@@ -537,8 +643,8 @@ class _DriverAppState extends State<DriverApp> {
             return const Center(child: Text('Unable to load available gigs.'));
           }
 
-          final gigLists =
-              snapshot.data ?? const DriverGigLists(available: [], booked: []);
+          final gigLists = snapshot.data ??
+              const DriverGigLists(available: [], booked: [], completed: []);
 
           return ListView(
             padding: const EdgeInsets.all(16),
@@ -578,6 +684,32 @@ class _DriverAppState extends State<DriverApp> {
                       .map(
                         (gig) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
+                          child: DriverGigTile(
+                            gig: gig,
+                            action: ElevatedButton(
+                              onPressed: () => _completeGig(gig),
+                              child: const Text('Complete'),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              const SizedBox(height: 16),
+              const Text(
+                'Completed gigs',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              if (gigLists.completed.isEmpty)
+                const Text('No completed gigs yet.')
+              else
+                Column(
+                  key: const ValueKey('completed-gigs'),
+                  children: gigLists.completed
+                      .map(
+                        (gig) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: DriverGigTile(gig: gig),
                         ),
                       )
@@ -592,10 +724,15 @@ class _DriverAppState extends State<DriverApp> {
 }
 
 class DriverGigLists {
-  const DriverGigLists({required this.available, required this.booked});
+  const DriverGigLists({
+    required this.available,
+    required this.booked,
+    required this.completed,
+  });
 
   final List<DriverGig> available;
   final List<DriverGig> booked;
+  final List<DriverGig> completed;
 }
 
 class DriverGigTile extends StatelessWidget {

@@ -27,6 +27,7 @@ class FakeSupabaseClient {
   from(table: string) {
     const updateFilter = {
       eq: () => updateFilter,
+      in: () => updateFilter,
       select: () => ({
         single: async () => ({ data: null, error: null })
       })

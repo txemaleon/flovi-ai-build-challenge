@@ -295,6 +295,41 @@ Delivery:
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 11 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
 
+## 2026-07-08 - Slice 11
+
+Prompt: make the relocation lifecycle clear after booking: Open, Booked, Completed, Cancelled.
+
+Constraints:
+
+- Extend the stored status model with `completed` and `cancelled`, while preserving `available` as the stored open state and labeling it `Open` in UI.
+- Dispatcher shows status summary counts and filters for All, Open, Booked, Completed, and Cancelled.
+- Dispatcher can cancel open/booked requests; no delete flow.
+- Driver can complete booked gigs and sees them in a Completed list.
+- Open/available lists exclude booked, completed, and cancelled gigs.
+- Supabase adapter and migrations support new statuses and atomic transitions.
+- Keep fallback data small with at least one example per status.
+- Do not add deployment work, UI redesign, or real secrets.
+- Keep tests at public app/application boundaries with fakes only at external boundaries.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Extended the core relocation lifecycle status model with `completed` and `cancelled` while keeping stored `available` as the open state.
+- Added core application use cases for dispatcher cancellation, driver completion, and driver completed-gig listing. Available/open queries continue to return only `available` requests, while booked and completed lists are scoped to the driver and sorted by scheduled time.
+- Extended the repository port with atomic lifecycle transitions: `cancelOpenOrBooked(requestId)` and `completeBooked(requestId, driverId)`.
+- Updated the in-memory repository and Supabase repository adapter for cancellation and completion. Generic dispatcher edit/update remains limited to editable fields and does not write status or driver ownership.
+- Added Supabase migrations `20260708210000_add_lifecycle_statuses.sql` and `20260708210100_add_lifecycle_transition_policies.sql`. The enum value migration is separate from the policy migration so the new enum values are committed before policy checks reference them.
+- Updated the dispatcher dashboard with status summary counts and filters for All, Open, Booked, Completed, and Cancelled. Stored `available` now displays as `Open`.
+- Added dispatcher cancel actions for open/booked requests with refresh and clear error handling.
+- Updated the driver Flutter app with a Completed list and Complete action for booked gigs. Available/open lists continue to exclude booked, completed, and cancelled gigs.
+- Updated small fallback seed data with examples across open, booked, completed, and cancelled lifecycle states.
+- Coverage correction: added focused tests for the new lifecycle failure paths and filtered-empty UI branch to keep owned TypeScript source at 100% statements, branches, functions, and lines.
+- Verification: `npm test` passed with dispatcher 5 test files / 43 tests and core 3 test files / 35 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(146/146)`, 100% branches `(101/101)`, 100% functions `(56/56)`, 100% lines `(143/143)`. Core coverage: 100% statements `(89/89)`, 100% branches `(52/52)`, 100% functions `(33/33)`, 100% lines `(89/89)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 13 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
 ## 2026-07-08 - Slice 10
 
 Prompt: make Supabase realtime and static hosting deployment setup explicit for a real Supabase project and public dispatcher/driver builds.

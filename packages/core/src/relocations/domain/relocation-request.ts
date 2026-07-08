@@ -1,4 +1,9 @@
-export const relocationRequestStatuses = ["available", "booked"] as const;
+export const relocationRequestStatuses = [
+  "available",
+  "booked",
+  "completed",
+  "cancelled"
+] as const;
 
 export type RelocationRequestStatus =
   (typeof relocationRequestStatuses)[number];
