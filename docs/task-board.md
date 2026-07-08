@@ -121,6 +121,16 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 9
 
+## Slice 10 - Supabase Realtime Enablement And Deployment Docs
+
+- [x] Confirm Slice 10 scope: migration and deployment docs only
+- [x] RED/GREEN: add automated deployment artifact check
+- [x] Add idempotent Supabase realtime enablement migration
+- [x] Add repo-level deployment documentation
+- [x] Confirm Vercel/static hosting config needs
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 10
+
 ## Later Slices
 
 - [ ] Deployment and public demo URLs

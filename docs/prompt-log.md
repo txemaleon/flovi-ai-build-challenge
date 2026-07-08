@@ -294,3 +294,31 @@ Delivery:
 - Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 11 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
+## 2026-07-08 - Slice 10
+
+Prompt: make Supabase realtime and static hosting deployment setup explicit for a real Supabase project and public dispatcher/driver builds.
+
+Constraints:
+
+- Add a Supabase migration enabling realtime delivery for `public.relocation_requests` where needed.
+- Keep the migration idempotent where practical.
+- Add repo-level deployment documentation covering local setup, Supabase migrations, Google OAuth callback URLs, dispatcher Vercel env vars, driver Flutter web dart-defines, and build commands.
+- Add Vercel config only if needed for the dispatcher or driver static build.
+- Do not change UI, commit secrets, run external CLI logins, or execute deployment.
+- Add a small automated deployment artifact check if a suitable pattern exists, without brittle text snapshots.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added `20260708203000_enable_relocation_requests_realtime.sql`, which sets `replica identity full` on `public.relocation_requests` and idempotently adds the table to the `supabase_realtime` publication by checking `pg_publication_tables` first.
+- Added `docs/deployment.md` with local setup, Supabase migration commands, Google OAuth callback URL guidance, Supabase redirect URL guidance, dispatcher Vercel environment variables and build settings, driver Flutter web `--dart-define` values, static build output, and secrets handling.
+- Confirmed no repo-level `vercel.json` is required for the dispatcher when Vercel project settings use `apps/dispatcher` as the root, `npm run build` as the build command, and `dist` as the output directory. The driver remains documented as a Flutter static web build that requires Flutter in the build environment or prebuilt static upload.
+- Added a focused deployment artifact test in the core workspace that verifies required deployment config names and realtime migration primitives without snapshotting full docs.
+- RED result: `npm test` failed because `docs/deployment.md` and `supabase/migrations/20260708203000_enable_relocation_requests_realtime.sql` did not exist yet.
+- GREEN result: the deployment guide and realtime migration were added, and `npm test` passed.
+- Verification: `npm test` passed with dispatcher 5 test files / 36 tests and core 3 test files / 23 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(124/124)`, 100% branches `(86/86)`, 100% functions `(43/43)`, 100% lines `(122/122)`. Core coverage: 100% statements `(60/60)`, 100% branches `(30/30)`, 100% functions `(24/24)`, 100% lines `(60/60)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 11 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
