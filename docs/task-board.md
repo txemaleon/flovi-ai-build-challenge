@@ -143,6 +143,16 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 11
 
+## Slice 12 - Lifecycle Authorization Hardening
+
+- [x] Confirm Slice 12 scope: Supabase lifecycle authorization only
+- [x] RED/GREEN: add migration artifact tests for database update guard
+- [x] Add database boundary guard for valid relocation lifecycle updates
+- [x] Preserve dispatcher edit/cancel, driver book, and driver complete updates
+- [x] Reject invalid direct status, ownership, and dispatcher changes
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 12
+
 ## Later Slices
 
 - [ ] Deployment and public demo URLs

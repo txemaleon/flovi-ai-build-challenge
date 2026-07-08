@@ -295,6 +295,40 @@ Delivery:
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 11 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
 
+## 2026-07-08 - Slice 12
+
+Prompt: harden lifecycle authorization so Supabase enforces the same relocation update rules as the apps, even when the Data API is called directly.
+
+Constraints:
+
+- Add a migration that enforces valid `relocation_requests` updates at the database boundary.
+- Preserve dispatcher editable-field updates on own requests while keeping `status` and `driver_id` unchanged.
+- Preserve dispatcher cancellation of own `available` or `booked` requests.
+- Preserve driver booking of `available` requests for themselves.
+- Preserve driver completion of their own `booked` requests.
+- Reject direct updates that change `dispatcher_id`, improperly change `driver_id`, move terminal `completed` or `cancelled` requests, or perform lifecycle transitions outside the allowed actor/status rules.
+- Keep app behavior unless a small adapter query change is required.
+- Do not add UI redesign, deployment work, or real secrets.
+- Add tests first around migration artifacts because local Supabase execution is not part of the repo verification flow.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added a focused migration artifact test proving that the hardening migration creates a database update guard function and trigger, checks `auth.uid()`, rejects `dispatcher_id` changes, treats `completed` and `cancelled` as terminal statuses, preserves `driver_id` during dispatcher edit/cancel paths, and encodes the allowed dispatcher cancel, driver book, and driver complete transitions.
+- RED result: `npm test -w @flovi/core -- --run test/deployment-artifacts.test.ts` failed because `supabase/migrations/20260708212000_guard_relocation_request_lifecycle_updates.sql` did not exist.
+- Added `20260708212000_guard_relocation_request_lifecycle_updates.sql`, which creates `public.guard_relocation_request_update()` and a `before update` trigger on `public.relocation_requests`.
+- The guard allows dispatcher editable-field updates on own requests when `status` and `driver_id` are unchanged.
+- The guard allows dispatcher cancellation of own `available` or `booked` requests while preserving driver ownership and editable fields.
+- The guard allows driver booking only from `available` to `booked` with `driver_id = auth.uid()`.
+- The guard allows driver completion only from `booked` to `completed` when the existing `driver_id = auth.uid()`.
+- The guard rejects unauthenticated updates, `dispatcher_id`/`id`/`created_at` changes, terminal status reversals, invalid `driver_id` changes, and lifecycle transitions outside those actor/status rules.
+- No app behavior or adapter query changes were required.
+- Verification: `npm test` passed with dispatcher 5 test files / 43 tests and core 3 test files / 36 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(146/146)`, 100% branches `(101/101)`, 100% functions `(56/56)`, 100% lines `(143/143)`. Core coverage: 100% statements `(89/89)`, 100% branches `(52/52)`, 100% functions `(33/33)`, 100% lines `(89/89)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 13 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
 ## 2026-07-08 - Slice 11
 
 Prompt: make the relocation lifecycle clear after booking: Open, Booked, Completed, Cancelled.

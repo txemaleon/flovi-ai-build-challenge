@@ -30,4 +30,28 @@ describe("deployment artifacts", () => {
       "alter publication supabase_realtime add table public.relocation_requests"
     );
   });
+
+  it("guards relocation request lifecycle updates at the database boundary", () => {
+    const migration = readRepoFile(
+      "supabase/migrations/20260708212000_guard_relocation_request_lifecycle_updates.sql"
+    );
+
+    expect(migration).toContain(
+      "create or replace function public.guard_relocation_request_update()"
+    );
+    expect(migration).toContain("before update on public.relocation_requests");
+    expect(migration).toContain("auth.uid()");
+    expect(migration).toContain("new.dispatcher_id is distinct from old.dispatcher_id");
+    expect(migration).toContain("old.status in ('completed', 'cancelled')");
+    expect(migration).toContain("new.driver_id is not distinct from old.driver_id");
+    expect(migration).toContain("old.status in ('available', 'booked')");
+    expect(migration).toContain("new.status = 'cancelled'");
+    expect(migration).toContain("old.status = 'available'");
+    expect(migration).toContain("new.status = 'booked'");
+    expect(migration).toContain("new.driver_id = actor_id");
+    expect(migration).toContain("old.status = 'booked'");
+    expect(migration).toContain("old.driver_id = actor_id");
+    expect(migration).toContain("new.status = 'completed'");
+    expect(migration).toContain("raise exception 'Invalid relocation request lifecycle update.'");
+  });
 });
