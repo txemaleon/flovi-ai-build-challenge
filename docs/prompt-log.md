@@ -29,22 +29,6 @@ Verification results will be added after the slice is implemented.
 
 Delivery:
 
-- Added `@supabase/supabase-js` to the dispatcher app.
-- Added `createDispatcherAuthService` as the dispatcher auth boundary over a minimal structural Supabase auth client. It supports current session reads, auth state subscriptions with cleanup, Google OAuth sign-in using provider `google` and the current app origin, and sign-out.
-- Added `DispatcherApp.vue` as the shell around the relocation dashboard. It renders a clear missing-config state, unauthenticated Google sign-in, authenticated dashboard wiring, auth state updates, and sign-out.
-- Removed the Slice 3 fake Google button from `RelocationDashboard`; auth now belongs to the shell.
-- Added runtime composition helpers for Vite env config, Supabase browser client creation, and wiring `SupabaseRelocationRequestRepository` through `createDispatcherRelocationService` with `session.user.id` as the dispatcher id.
-- Replaced the local in-memory dispatcher `main.ts` composition with the real Supabase browser-client composition path. If public Supabase env vars are missing, the shell renders the configuration state instead of a blank screen.
-- Added a new migration, `20260708183500_grant_relocation_requests_to_authenticated.sql`, granting only `authenticated` access required for browser Data API use: `usage` on schema `public`, `usage` on type `public.relocation_request_status`, and `select`, `insert`, `update` on `public.relocation_requests`. No anonymous table grants were added, and the initial migration was not edited.
-- `.env.example` already had the required public `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` names, so no env variable names changed. Google OAuth secrets remain Supabase provider configuration only.
-- Verification: `npm test` passed with dispatcher 5 test files / 28 tests and core 2 test files / 7 tests.
-- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(96/96)`, 100% branches `(80/80)`, 100% functions `(31/31)`, 100% lines `(94/94)`. Core coverage: 100% statements `(25/25)`, 100% branches `(10/10)`, 100% functions `(11/11)`, 100% lines `(25/25)`.
-- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
-- Verification: `npm run dispatcher:build` passed; Vite built `dist/index.html`, CSS bundle, and JS bundle successfully.
-- Closeout: the verification results above were confirmed by a final root-level rerun in this thread immediately before the Slice 4 commit.
-
-Delivery:
-
 - Created a minimal npm workspace with `packages/core` for shared TypeScript application logic and placeholder app boundaries for dispatcher and driver.
 - Added an application-boundary behavior test for dispatcher create + list relocation requests.
 - RED result: `npm test` failed because `packages/core/src/relocations/index.js` did not exist yet.
@@ -146,4 +130,18 @@ Constraints:
 - Run `npm test`, `npm run coverage`, `npm run typecheck`, and `npm run dispatcher:build` from the repo root before committing.
 - Require 100% statements, branches, functions, and lines for owned source before committing.
 
-Verification results will be added after the slice is implemented.
+Delivery:
+
+- Added `@supabase/supabase-js` to the dispatcher app.
+- Added `createDispatcherAuthService` as the dispatcher auth boundary over a minimal structural Supabase auth client. It supports current session reads, auth state subscriptions with cleanup, Google OAuth sign-in using provider `google` and the current app origin, and sign-out.
+- Added `DispatcherApp.vue` as the shell around the relocation dashboard. It renders a clear missing-config state, unauthenticated Google sign-in, authenticated dashboard wiring, auth state updates, and sign-out.
+- Removed the Slice 3 fake Google button from `RelocationDashboard`; auth now belongs to the shell.
+- Added runtime composition helpers for Vite env config, Supabase browser client creation, and wiring `SupabaseRelocationRequestRepository` through `createDispatcherRelocationService` with `session.user.id` as the dispatcher id.
+- Replaced the local in-memory dispatcher `main.ts` composition with the real Supabase browser-client composition path. If public Supabase env vars are missing, the shell renders the configuration state instead of a blank screen.
+- Added a new migration, `20260708183500_grant_relocation_requests_to_authenticated.sql`, granting only `authenticated` access required for browser Data API use: `usage` on schema `public`, `usage` on type `public.relocation_request_status`, and `select`, `insert`, `update` on `public.relocation_requests`. No anonymous table grants were added, and the initial migration was not edited.
+- `.env.example` already had the required public `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` names, so no env variable names changed. Google OAuth secrets remain Supabase provider configuration only.
+- Verification: `npm test` passed with dispatcher 5 test files / 28 tests and core 2 test files / 7 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(96/96)`, 100% branches `(80/80)`, 100% functions `(31/31)`, 100% lines `(94/94)`. Core coverage: 100% statements `(25/25)`, 100% branches `(10/10)`, 100% functions `(11/11)`, 100% lines `(25/25)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run dispatcher:build` passed; Vite built `dist/index.html`, CSS bundle, and JS bundle successfully.
+- Closeout: the verification results above were confirmed by a final root-level rerun in this thread immediately before the Slice 4 commit.
