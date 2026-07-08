@@ -7,7 +7,6 @@ export type UpdateRelocationRequestFields = Readonly<{
   destination: string;
   scheduledAt: string;
   notes: string;
-  status?: RelocationRequest["status"];
 }>;
 
 export type UpdateRelocationRequestDependencies = Readonly<{

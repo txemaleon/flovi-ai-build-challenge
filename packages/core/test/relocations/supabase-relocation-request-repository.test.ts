@@ -190,7 +190,7 @@ describe("SupabaseRelocationRequestRepository", () => {
     );
   });
 
-  it("updates a relocation request using snake_case columns scoped by id", async () => {
+  it("updates editable relocation request fields using snake_case columns scoped by id", async () => {
     const supabase = new FakeSupabaseClient(
       { error: null },
       { data: [], error: null },
@@ -215,12 +215,10 @@ describe("SupabaseRelocationRequestRepository", () => {
     await expect(
       repository.update({
         id: "request-123",
-        dispatcherId: "dispatcher-123",
         origin: "Madrid Chamartin",
         destination: "Valencia Port",
         scheduledAt: "2026-07-10T15:00:00.000Z",
-        notes: "Bring parking ticket.",
-        status: "available"
+        notes: "Bring parking ticket."
       })
     ).resolves.toEqual({
       id: "request-123",
@@ -237,8 +235,7 @@ describe("SupabaseRelocationRequestRepository", () => {
         origin: "Madrid Chamartin",
         destination: "Valencia Port",
         scheduled_at: "2026-07-10T15:00:00.000Z",
-        notes: "Bring parking ticket.",
-        status: "available"
+        notes: "Bring parking ticket."
       }
     ]);
     expect(supabase.updateFilters).toEqual([
@@ -246,7 +243,7 @@ describe("SupabaseRelocationRequestRepository", () => {
     ]);
   });
 
-  it("defaults the Supabase update status when the input does not include one", async () => {
+  it("does not write status or driver ownership in the generic Supabase update payload", async () => {
     const supabase = new FakeSupabaseClient(
       { error: null },
       { data: [], error: null },
@@ -281,50 +278,7 @@ describe("SupabaseRelocationRequestRepository", () => {
         origin: "Madrid Chamartin",
         destination: "Valencia Port",
         scheduled_at: "2026-07-10T15:00:00.000Z",
-        notes: "Bring parking ticket.",
-        status: "available"
-      }
-    ]);
-  });
-
-  it("uses an explicit booked status in the Supabase update payload", async () => {
-    const supabase = new FakeSupabaseClient(
-      { error: null },
-      { data: [], error: null },
-      {
-        data: [
-          {
-            id: "request-123",
-            dispatcher_id: "dispatcher-123",
-            origin: "Madrid Chamartin",
-            destination: "Valencia Port",
-            scheduled_at: "2026-07-10T15:00:00.000Z",
-            notes: "Bring parking ticket.",
-            status: "booked",
-            driver_id: "driver-456"
-          }
-        ],
-        error: null
-      }
-    );
-    const repository = new SupabaseRelocationRequestRepository(supabase);
-
-    await repository.update({
-      id: "request-123",
-      origin: "Madrid Chamartin",
-      destination: "Valencia Port",
-      scheduledAt: "2026-07-10T15:00:00.000Z",
-      notes: "Bring parking ticket.",
-      status: "booked"
-    });
-
-    expect(supabase.updates).toEqual([
-      {
-        origin: "Madrid Chamartin",
-        destination: "Valencia Port",
-        scheduled_at: "2026-07-10T15:00:00.000Z",
-        notes: "Bring parking ticket.",
-        status: "booked"
+        notes: "Bring parking ticket."
       }
     ]);
   });

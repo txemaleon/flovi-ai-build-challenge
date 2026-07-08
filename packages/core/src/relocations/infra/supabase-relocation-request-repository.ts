@@ -61,7 +61,6 @@ type RelocationRequestUpdateRow =
       destination: string;
       scheduled_at: string;
       notes: string;
-      status: RelocationRequestStatus;
     }>
   | Readonly<{
       status: "booked";
@@ -178,7 +177,6 @@ function toRelocationRequestUpdateRow(
     origin: request.origin,
     destination: request.destination,
     scheduled_at: request.scheduledAt,
-    notes: request.notes,
-    status: request.status === "booked" ? "booked" : "available"
+    notes: request.notes
   };
 }
