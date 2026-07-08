@@ -70,4 +70,30 @@ describe("deployment artifacts", () => {
     );
     expect(guide).toContain("npm run seed:demo");
   });
+
+  it("defines GitHub CI verification and a demo smoke checklist", () => {
+    const workflow = readRepoFile(".github/workflows/verify.yml");
+    const checklist = readRepoFile("docs/demo-smoke-checklist.md");
+
+    expect(workflow).toContain("pull_request:");
+    expect(workflow).toContain("push:");
+    expect(workflow).toContain("node-version: 22");
+    expect(workflow).toContain("npm ci");
+    expect(workflow).toContain("npm test");
+    expect(workflow).toContain("npm run coverage");
+    expect(workflow).toContain("npm run typecheck");
+    expect(workflow).toContain("npm run driver:test");
+    expect(workflow).toContain("npm run driver:build");
+
+    expect(checklist).toContain("local fallback dispatcher");
+    expect(checklist).toContain("local fallback driver");
+    expect(checklist).toContain("npm run seed:demo");
+    expect(checklist).toContain("SUPABASE_URL");
+    expect(checklist).toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(checklist).toContain("DEMO_DISPATCHER_USER_ID");
+    expect(checklist).toContain("DEMO_DRIVER_USER_ID");
+    expect(checklist).toContain("/auth/v1/callback");
+    expect(checklist).toContain("hosted dispatcher URL");
+    expect(checklist).toContain("hosted driver URL");
+  });
 });

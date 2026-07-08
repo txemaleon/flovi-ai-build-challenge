@@ -361,6 +361,34 @@ Delivery:
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 16 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
 
+## 2026-07-08 - Slice 14
+
+Prompt: make the repository ready to publish and easy to verify from GitHub before deployment.
+
+Constraints:
+
+- Add `.github/workflows/verify.yml` running on push and pull request.
+- Use Node 22, `npm ci`, and the existing root verification commands.
+- Keep CI simple and deterministic with no secrets, deployment, or Supabase access.
+- Add a concise demo smoke checklist covering local fallback dispatcher/driver demo data, Supabase seed command/env vars, Google OAuth callback/redirect checks, and hosted dispatcher/driver URL checks.
+- Add artifact tests first for workflow and checklist contents.
+- No UI changes, deployment work, or real secrets.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added `.github/workflows/verify.yml` for GitHub Actions verification on `push` and `pull_request`.
+- The workflow uses Node 22, `npm ci`, and the existing root commands: `npm test`, `npm run coverage`, `npm run typecheck`, `npm run driver:test`, and `npm run driver:build`.
+- Added `docs/demo-smoke-checklist.md` with local fallback dispatcher/driver checks, Supabase demo seed command and env vars, Google OAuth callback/redirect checks, hosted dispatcher URL check, and hosted driver URL check.
+- Added a focused deployment artifact test that proves the workflow and smoke checklist contain the required commands and checks.
+- RED result: `npm test -w @flovi/core -- --run test/deployment-artifacts.test.ts` failed because `.github/workflows/verify.yml` did not exist.
+- GREEN result: the focused deployment artifact test passed after adding the workflow and checklist.
+- Verification: `npm test` passed with dispatcher 5 test files / 48 tests and core 4 test files / 42 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(179/179)`, 100% branches `(134/134)`, 100% functions `(72/72)`, 100% lines `(173/173)`. Core coverage: 100% statements `(105/105)`, 100% branches `(69/69)`, 100% functions `(44/44)`, 100% lines `(104/104)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 16 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
 ## 2026-07-08 - Slice 11
 
 Prompt: make the relocation lifecycle clear after booking: Open, Booked, Completed, Cancelled.

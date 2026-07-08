@@ -163,6 +163,15 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 13
 
+## Slice 14 - CI And Demo Smoke Readiness
+
+- [x] Confirm Slice 14 scope: CI workflow and smoke checklist only
+- [x] RED/GREEN: add artifact tests for workflow and checklist
+- [x] Add GitHub Actions verification workflow
+- [x] Add demo smoke checklist documentation
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 14
+
 ## Later Slices
 
 - [ ] Deployment and public demo URLs
