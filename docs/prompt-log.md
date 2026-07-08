@@ -389,6 +389,52 @@ Delivery:
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 16 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
 
+## 2026-07-08 - Slice 15
+
+Prompt: make Dispatcher and Driver feel like cohesive, production-grade operations apps with standard Google sign-in buttons.
+
+Constraints:
+
+- Replace Google login buttons in Dispatcher and Driver with a standard Google-style pattern: multicolor G icon, `Sign in with Google`, neutral/white surface, subtle border/ring, 40-48px height, 14px medium text, correct spacing, and no blue/purple primary styling.
+- Preserve existing Supabase OAuth behavior.
+- Use Tailwind CSS for the dispatcher. Use shadcn-vue direction where practical through source-owned, customizable primitives/tokens; document if the CLI is not practical.
+- Make the dispatcher denser and more operational with aligned toolbar, consistent controls, readable status badges, and predictable table/list layout.
+- Mirror the same design tokens in Flutter `ThemeData` and widgets for the driver app.
+- Make the driver feel like a mobile operations app with compact app bar, full-width shell, filters, status navigation, scrollable gig cards, and safe-area-aware actions.
+- Use a calm light palette, neutral greys, restrained blue/teal accent, and green/amber/red/grey status palette.
+- Avoid marketing hero, decorative gradients/blobs, `transition: all`, data semantics changes, secrets, and deployment work.
+- Add focused UI tests for Google button semantics, dispatcher filter/status affordances, and driver mobile sections.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added Tailwind CSS to the dispatcher Vite app and a source-owned token stylesheet in `apps/dispatcher/src/styles.css`.
+- Used local shadcn-style primitives/tokens instead of the shadcn-vue CLI because the slice only needed a small source-owned Button/Input/Badge/Card/Table-style pass, and generated component scaffolding would add broader structure than this repo currently needs.
+- Replaced the dispatcher Google sign-in action with a standard neutral Google-style button: multicolor G icon, `Sign in with Google`, white surface, subtle ring/shadow, 44px height, and 14px medium text. Supabase OAuth behavior is unchanged.
+- Made the dispatcher dashboard denser and more operational with an aligned header, compact request form, explicit status filter toolbar, readable lifecycle badges, tighter filters, and a predictable request list layout.
+- Replaced the driver Google sign-in action with a standard neutral Google-style button and multicolor G icon while preserving the existing auth service call.
+- Mirrored dispatcher design tokens in Flutter `ThemeData` and widgets: calm off-white background, neutral card surfaces, teal actions, compact app bar, status chips, and 8-12px radii.
+- Corrected the driver layout after review: filters now keep `Origin`/`Destination` in one row and `From`/`To` in a second row when width allows; available gigs use the full container width with a responsive grid of 1 column on mobile, 3 columns on tablet, and 5 columns on desktop; each gig card stretches to fill its grid column.
+- Added focused UI tests for dispatcher Google button semantics, dispatcher operational toolbar/status affordances, driver Google button semantics, driver section visibility, driver filter-row layout, and driver available-grid breakpoints/column behavior.
+- No backend/data semantics, secrets, or deployment behavior changed.
+
+Screenshots:
+
+- [Dispatcher signed-in dashboard](docs/assets/ui-polish/dispatcher-dashboard-desktop.png)
+- [Dispatcher signed-out Google login](docs/assets/ui-polish/dispatcher-login-mobile.png)
+- [Driver signed-in available gigs mobile](docs/assets/ui-polish/driver-available-mobile.png)
+- [Driver signed-in available gigs desktop grid](docs/assets/ui-polish/driver-available-tablet.png)
+- [Driver booked/completed mobile state](docs/assets/ui-polish/driver-booked-completed-mobile.png)
+- [Driver signed-out Google login](docs/assets/ui-polish/driver-login-mobile.png)
+
+Verification:
+
+- `npm test` passed with dispatcher 5 test files / 50 tests and core 4 test files / 42 tests.
+- `npm run coverage` passed. Dispatcher coverage: 100% statements `(184/184)`, 100% branches `(137/137)`, 100% functions `(73/73)`, 100% lines `(178/178)`. Core coverage: 100% statements `(105/105)`, 100% branches `(69/69)`, 100% functions `(44/44)`, 100% lines `(104/104)`.
+- `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 20 tests passed.
+- `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
 ## 2026-07-08 - Slice 11
 
 Prompt: make the relocation lifecycle clear after booking: Open, Booked, Completed, Cancelled.

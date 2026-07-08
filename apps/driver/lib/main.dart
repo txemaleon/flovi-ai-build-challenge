@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,6 +18,7 @@ Future<void> main() async {
   runApp(
     MaterialApp(
       title: 'Flovi Driver',
+      theme: FloviDriverTheme.theme,
       home: DriverShell(
         authService: config.hasSupabaseConfig
             ? SupabaseDriverAuthService(
@@ -35,6 +37,47 @@ Future<void> main() async {
       ),
     ),
   );
+}
+
+class FloviDriverTheme {
+  static ThemeData get theme {
+    const ink = Color(0xff172033);
+    const accent = Color(0xff0f766e);
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: accent,
+        brightness: Brightness.light,
+        primary: accent,
+        surface: Colors.white,
+      ),
+      scaffoldBackgroundColor: const Color(0xfff5f6f8),
+      textTheme: Typography.blackCupertino.apply(
+        bodyColor: ink,
+        displayColor: ink,
+        fontFamily: 'Inter',
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xffd9dee8)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xffd9dee8)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: accent, width: 1.5),
+        ),
+      ),
+    );
+  }
 }
 
 class DriverRuntimeConfig {
@@ -438,30 +481,87 @@ class _DriverShellState extends State<DriverShell> {
 
         if (session == null) {
           return Scaffold(
-            backgroundColor: const Color(0xfff6f7f9),
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Driver sign-in',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
+            backgroundColor: const Color(0xfff5f6f8),
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x100f172a),
+                          blurRadius: 24,
+                          offset: Offset(0, 10),
+                        ),
+                        BoxShadow(color: Color(0x0f0f172a), spreadRadius: 1),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Driver operations',
+                            style: TextStyle(
+                              color: Color(0xff64748b),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Sign in to browse and book gigs',
+                            style: TextStyle(
+                              color: Color(0xff172033),
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Use your dispatcher-approved Google account to view open, booked, and completed relocations.',
+                            style: TextStyle(
+                              color: Color(0xff64748b),
+                              fontSize: 14,
+                              height: 1.45,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          GoogleSignInButton(onPressed: _signInWithGoogle),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 12),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: const Color(0xfffff1f2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0x1fb91c1c),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Text(
+                                  _errorMessage!,
+                                  style: const TextStyle(
+                                    color: Color(0xffb91c1c),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _signInWithGoogle,
-                      child: const Text('Sign in with Google'),
-                    ),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 12),
-                      Text(_errorMessage!),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -490,6 +590,105 @@ class _DriverShellState extends State<DriverShell> {
       },
     );
   }
+}
+
+class GoogleSignInButton extends StatelessWidget {
+  const GoogleSignInButton({required this.onPressed, super.key});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      key: const ValueKey('google-sign-in-button'),
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xff27272a),
+        minimumSize: const Size.fromHeight(44),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        side: const BorderSide(color: Color(0xffd4d4d8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        textStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0,
+        ),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GoogleGIcon(),
+          SizedBox(width: 12),
+          Text('Sign in with Google'),
+        ],
+      ),
+    );
+  }
+}
+
+class GoogleGIcon extends StatelessWidget {
+  const GoogleGIcon({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      key: ValueKey('google-g-icon'),
+      height: 20,
+      width: 20,
+      child: CustomPaint(painter: GoogleGIconPainter()),
+    );
+  }
+}
+
+class GoogleGIconPainter extends CustomPainter {
+  const GoogleGIconPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final strokeWidth = size.width * 0.18;
+    final arcRect = rect.deflate(strokeWidth / 2);
+
+    void drawArc(Color color, double start, double sweep) {
+      canvas.drawArc(
+        arcRect,
+        start,
+        sweep,
+        false,
+        Paint()
+          ..color = color
+          ..strokeCap = StrokeCap.square
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke,
+      );
+    }
+
+    drawArc(const Color(0xff4285f4), -0.08, 1.55);
+    drawArc(const Color(0xff34a853), 1.47, 1.05);
+    drawArc(const Color(0xfffbbc05), 2.52, 1.15);
+    drawArc(const Color(0xffea4335), 3.67, 1.55);
+
+    final bluePaint = Paint()
+      ..color = const Color(0xff4285f4)
+      ..strokeCap = StrokeCap.square
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(size.width * 0.52, size.height * 0.5),
+      Offset(size.width * 0.94, size.height * 0.5),
+      bluePaint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.86, size.height * 0.5),
+      Offset(size.width * 0.86, size.height * 0.68),
+      bluePaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant GoogleGIconPainter oldDelegate) => false;
 }
 
 class InMemoryDriverGigService implements DriverGigService {
@@ -822,12 +1021,17 @@ class _DriverAppState extends State<DriverApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff6f7f9),
+      backgroundColor: const Color(0xfff5f6f8),
       appBar: AppBar(
-        title: const Text('Driver gigs'),
+        toolbarHeight: 56,
+        title: const Text(
+          'Driver gigs',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xff172033),
-        elevation: 0,
+        surfaceTintColor: Colors.white,
+        elevation: 0.5,
       ),
       body: FutureBuilder<DriverGigLists>(
         future: _gigLists,
@@ -852,72 +1056,128 @@ class _DriverAppState extends State<DriverApp> {
           final suggestedNext = suggestedNextGigs(gigLists);
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
+              DecoratedBox(
+                key: const ValueKey('driver-filter-panel'),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xffe2e8f0)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0a0f172a),
+                      blurRadius: 10,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Find routes',
+                        style: TextStyle(
+                          color: Color(0xff334155),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final shouldStack = constraints.maxWidth < 320;
+
+                          return Column(
+                            children: [
+                              FilterFieldRow(
+                                key: const ValueKey('driver-place-filter-row'),
+                                shouldStack: shouldStack,
+                                fields: [
+                                  TextField(
+                                    key: const ValueKey('driver-origin-filter'),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Origin',
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _originFilter = value;
+                                      });
+                                    },
+                                  ),
+                                  TextField(
+                                    key: const ValueKey(
+                                      'driver-destination-filter',
+                                    ),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Destination',
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _destinationFilter = value;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              FilterFieldRow(
+                                key: const ValueKey('driver-date-filter-row'),
+                                shouldStack: shouldStack,
+                                fields: [
+                                  TextField(
+                                    key: const ValueKey('driver-from-filter'),
+                                    decoration: const InputDecoration(
+                                        labelText: 'From'),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _fromFilter = value;
+                                      });
+                                    },
+                                  ),
+                                  TextField(
+                                    key: const ValueKey('driver-to-filter'),
+                                    decoration:
+                                        const InputDecoration(labelText: 'To'),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _toFilter = value;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                key: const ValueKey('driver-status-navigation'),
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  SizedBox(
-                    width: 180,
-                    child: TextField(
-                      key: const ValueKey('driver-origin-filter'),
-                      decoration: const InputDecoration(labelText: 'Origin'),
-                      onChanged: (value) {
-                        setState(() {
-                          _originFilter = value;
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(
-                    width: 180,
-                    child: TextField(
-                      key: const ValueKey('driver-destination-filter'),
-                      decoration:
-                          const InputDecoration(labelText: 'Destination'),
-                      onChanged: (value) {
-                        setState(() {
-                          _destinationFilter = value;
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(
-                    width: 160,
-                    child: TextField(
-                      key: const ValueKey('driver-from-filter'),
-                      decoration: const InputDecoration(labelText: 'From'),
-                      onChanged: (value) {
-                        setState(() {
-                          _fromFilter = value;
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(
-                    width: 160,
-                    child: TextField(
-                      key: const ValueKey('driver-to-filter'),
-                      decoration: const InputDecoration(labelText: 'To'),
-                      onChanged: (value) {
-                        setState(() {
-                          _toFilter = value;
-                        });
-                      },
-                    ),
+                  StatusChip(label: 'Open', count: filteredAvailable.length),
+                  StatusChip(label: 'Booked', count: gigLists.booked.length),
+                  StatusChip(
+                    label: 'Completed',
+                    count: gigLists.completed.length,
                   ),
                 ],
               ),
               const SizedBox(height: 20),
               if (suggestedNext.isNotEmpty) ...[
-                const Text(
-                  'Suggested next',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                ),
+                const SectionTitle('Suggested next'),
                 const SizedBox(height: 12),
                 Column(
                   key: const ValueKey('suggested-next-gigs'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: suggestedNext
                       .map(
                         (gig) => Padding(
@@ -935,37 +1195,28 @@ class _DriverAppState extends State<DriverApp> {
                 ),
                 const SizedBox(height: 8),
               ],
-              const Text(
-                'Available gigs',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
+              const SectionTitle('Available gigs'),
               const SizedBox(height: 12),
               if (filteredAvailable.isEmpty)
-                const Text('No available gigs yet.')
+                const EmptySection(message: 'No available gigs yet.')
               else
-                ...filteredAvailable.map(
-                  (gig) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: DriverGigTile(
-                      gig: gig,
-                      action: ElevatedButton(
-                        onPressed: () => _bookGig(gig),
-                        child: const Text('Book'),
-                      ),
-                    ),
+                AvailableGigGrid(
+                  key: const ValueKey('available-gigs'),
+                  gigs: filteredAvailable,
+                  buildAction: (gig) => ElevatedButton(
+                    onPressed: () => _bookGig(gig),
+                    child: const Text('Book'),
                   ),
                 ),
               const SizedBox(height: 16),
-              const Text(
-                'Booked gigs',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
+              const SectionTitle('Booked gigs'),
               const SizedBox(height: 12),
               if (gigLists.booked.isEmpty)
-                const Text('No booked gigs yet.')
+                const EmptySection(message: 'No booked gigs yet.')
               else
                 Column(
                   key: const ValueKey('booked-gigs'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: gigLists.booked
                       .map(
                         (gig) => Padding(
@@ -982,16 +1233,14 @@ class _DriverAppState extends State<DriverApp> {
                       .toList(),
                 ),
               const SizedBox(height: 16),
-              const Text(
-                'Completed gigs',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
+              const SectionTitle('Completed gigs'),
               const SizedBox(height: 12),
               if (gigLists.completed.isEmpty)
-                const Text('No completed gigs yet.')
+                const EmptySection(message: 'No completed gigs yet.')
               else
                 Column(
                   key: const ValueKey('completed-gigs'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: gigLists.completed
                       .map(
                         (gig) => Padding(
@@ -1004,6 +1253,164 @@ class _DriverAppState extends State<DriverApp> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class FilterFieldRow extends StatelessWidget {
+  const FilterFieldRow({
+    required this.fields,
+    required this.shouldStack,
+    super.key,
+  });
+
+  final List<Widget> fields;
+  final bool shouldStack;
+
+  @override
+  Widget build(BuildContext context) {
+    if (shouldStack) {
+      return Column(
+        children: [
+          for (final field in fields) ...[
+            field,
+            if (field != fields.last) const SizedBox(height: 10),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: fields.first),
+        const SizedBox(width: 10),
+        Expanded(child: fields.last),
+      ],
+    );
+  }
+}
+
+class SectionTitle extends StatelessWidget {
+  const SectionTitle(this.label, {super.key});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: const TextStyle(
+        color: Color(0xff172033),
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+}
+
+class AvailableGigGrid extends StatelessWidget {
+  const AvailableGigGrid({
+    required this.gigs,
+    required this.buildAction,
+    super.key,
+  });
+
+  final List<DriverGig> gigs;
+  final Widget Function(DriverGig gig) buildAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = availableGigColumnCount(constraints.maxWidth);
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 244,
+          ),
+          itemCount: gigs.length,
+          itemBuilder: (context, index) {
+            final gig = gigs[index];
+
+            return DriverGigTile(
+              key: ValueKey('gig-card-${gig.id}'),
+              gig: gig,
+              action: buildAction(gig),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+int availableGigColumnCount(double width) {
+  if (width >= 1100) {
+    return 5;
+  }
+
+  if (width >= 700) {
+    return 3;
+  }
+
+  return 1;
+}
+
+class StatusChip extends StatelessWidget {
+  const StatusChip({required this.label, required this.count, super.key});
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xffeef2f7),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xffe2e8f0)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Text(
+          '$label $count',
+          style: const TextStyle(
+            color: Color(0xff334155),
+            fontSize: 13,
+            fontFeatures: [FontFeature.tabularFigures()],
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class EmptySection extends StatelessWidget {
+  const EmptySection({required this.message, super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xfff8fafc),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xffe2e8f0)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Text(
+          message,
+          style: const TextStyle(color: Color(0xff64748b), fontSize: 14),
+        ),
       ),
     );
   }
@@ -1037,29 +1444,39 @@ class DriverGigTile extends StatelessWidget {
         side: const BorderSide(color: Color(0xffd9dee8)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               '${gig.origin} to ${gig.destination}',
               key: const ValueKey('gig-route'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: const Color(0xff172033),
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               formatScheduledAt(gig.scheduledAt),
-              style: const TextStyle(color: Color(0xff546179)),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Color(0xff546179), fontSize: 14),
             ),
             if (gig.notes.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(gig.notes),
+              const SizedBox(height: 6),
+              Text(
+                gig.notes,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, height: 1.25),
+              ),
             ],
             if (action != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               action!,
             ],
           ],

@@ -115,53 +115,120 @@ function setSession(nextSession: DispatcherSession | null) {
 </script>
 
 <template>
-  <main class="app-shell">
-    <section v-if="configurationMessage" class="auth-panel">
-      <p class="eyebrow">Configuration</p>
-      <h1>Supabase configuration is missing</h1>
-      <p class="state-message">{{ configurationMessage }}</p>
+  <main class="min-h-screen bg-flovi-bg text-flovi-ink antialiased">
+    <section
+      v-if="configurationMessage"
+      class="mx-auto grid min-h-screen w-full max-w-xl content-center px-5 py-16"
+    >
+      <div class="rounded-xl bg-white p-6 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_10px_24px_rgba(15,23,42,0.07)]">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+          Configuration
+        </p>
+        <h1 class="mb-3 text-balance text-2xl font-semibold leading-tight tracking-normal text-slate-950">
+          Supabase configuration is missing
+        </h1>
+        <p class="m-0 text-pretty text-sm leading-6 text-slate-600">
+          {{ configurationMessage }}
+        </p>
+      </div>
     </section>
 
-    <section v-else-if="isCheckingSession" class="auth-panel">
-      <p class="eyebrow">Dispatcher</p>
-      <h1>Checking session</h1>
-      <p class="state-message">Loading dispatcher session...</p>
+    <section
+      v-else-if="isCheckingSession"
+      class="mx-auto grid min-h-screen w-full max-w-xl content-center px-5 py-16"
+    >
+      <div class="rounded-xl bg-white p-6 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_10px_24px_rgba(15,23,42,0.07)]">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+          Dispatcher
+        </p>
+        <h1 class="mb-3 text-balance text-2xl font-semibold leading-tight tracking-normal text-slate-950">
+          Checking session
+        </h1>
+        <p class="m-0 text-sm leading-6 text-slate-600">
+          Loading dispatcher session...
+        </p>
+      </div>
     </section>
 
-    <section v-else-if="!session" class="auth-panel">
-      <p class="eyebrow">Dispatcher</p>
-      <h1>Sign in to manage relocations</h1>
-      <p v-if="authError" class="state-message state-message-error">
-        {{ authError }}
-      </p>
-      <button
-        data-test="google-sign-in"
-        class="primary-button"
-        type="button"
-        @click="signInWithGoogle"
-      >
-        Sign in with Google
-      </button>
+    <section
+      v-else-if="!session"
+      class="mx-auto grid min-h-screen w-full max-w-xl content-center px-5 py-16"
+    >
+      <div class="rounded-xl bg-white p-6 shadow-[0_0_0_1px_rgba(15,23,42,0.06),0_10px_24px_rgba(15,23,42,0.07)]">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+          Dispatcher
+        </p>
+        <h1 class="mb-3 text-balance text-2xl font-semibold leading-tight tracking-normal text-slate-950">
+          Sign in to manage relocations
+        </h1>
+        <p class="mb-5 text-pretty text-sm leading-6 text-slate-600">
+          Access the operations dashboard, create requests, and keep relocation
+          status moving.
+        </p>
+        <p
+          v-if="authError"
+          class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 shadow-[inset_0_0_0_1px_rgba(185,28,28,0.12)]"
+        >
+          {{ authError }}
+        </p>
+        <button
+          data-test="google-sign-in"
+          aria-label="Sign in with Google"
+          class="google-sign-in-button inline-flex h-11 min-w-56 items-center justify-center gap-3 rounded-lg bg-white px-4 text-sm font-medium text-zinc-800 shadow-[0_0_0_1px_rgba(24,24,27,0.14),0_1px_2px_rgba(24,24,27,0.06)] transition-[background-color,box-shadow,transform] duration-150 ease-out hover:bg-zinc-50 hover:shadow-[0_0_0_1px_rgba(24,24,27,0.18),0_2px_4px_rgba(24,24,27,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:scale-[0.96]"
+          type="button"
+          @click="signInWithGoogle"
+        >
+          <svg
+            data-test="google-g-icon"
+            aria-hidden="true"
+            class="h-5 w-5 shrink-0"
+            viewBox="0 0 18 18"
+          >
+            <path
+              fill="#4285F4"
+              d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"
+            />
+            <path
+              fill="#34A853"
+              d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.94v2.33A9 9 0 0 0 9 18Z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M3.96 10.71a5.41 5.41 0 0 1 0-3.42V4.96H.94a9 9 0 0 0 0 8.08l3.02-2.33Z"
+            />
+            <path
+              fill="#EA4335"
+              d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A8.65 8.65 0 0 0 9 0 9 9 0 0 0 .94 4.96l3.02 2.33C4.67 5.16 6.66 3.58 9 3.58Z"
+            />
+          </svg>
+          Sign in with Google
+        </button>
+      </div>
     </section>
 
-    <section v-else class="authenticated-shell">
-      <header class="top-bar">
+    <section v-else class="min-h-screen">
+      <header class="sticky top-0 z-10 flex items-center justify-between gap-4 bg-white px-5 py-3 shadow-[0_1px_0_rgba(15,23,42,0.08)] sm:px-8">
         <div>
-          <p class="eyebrow">Signed in</p>
-          <p class="session-label">
+          <p class="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+            Dispatcher
+          </p>
+          <p class="m-0 overflow-wrap-anywhere text-sm font-semibold text-slate-800">
             {{ session.user.email ?? session.user.id }}
           </p>
         </div>
         <button
           data-test="sign-out"
-          class="secondary-button"
+          class="min-h-10 rounded-lg bg-slate-100 px-3.5 text-sm font-semibold text-slate-700 transition-[background-color,transform] duration-150 ease-out hover:bg-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 active:scale-[0.96]"
           type="button"
           @click="signOut"
         >
           Sign out
         </button>
       </header>
-      <p v-if="authError" class="state-message state-message-error">
+      <p
+        v-if="authError"
+        class="mx-5 mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 shadow-[inset_0_0_0_1px_rgba(185,28,28,0.12)] sm:mx-8"
+      >
         {{ authError }}
       </p>
       <RelocationDashboard
@@ -171,110 +238,3 @@ function setSession(nextSession: DispatcherSession | null) {
     </section>
   </main>
 </template>
-
-<style scoped>
-.app-shell {
-  min-height: 100vh;
-  background: #f6f7f9;
-  color: #172033;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-.auth-panel {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 72px 24px;
-}
-
-.authenticated-shell {
-  min-height: 100vh;
-}
-
-.top-bar {
-  align-items: center;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-  display: flex;
-  justify-content: space-between;
-  padding: 14px 32px;
-}
-
-.eyebrow {
-  margin: 0 0 6px;
-  color: #607089;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-h1 {
-  margin: 0 0 14px;
-  font-size: clamp(1.7rem, 2vw, 2.25rem);
-  letter-spacing: 0;
-  line-height: 1.1;
-  text-wrap: balance;
-}
-
-.session-label,
-.state-message {
-  color: #607089;
-  margin: 0;
-}
-
-.state-message {
-  margin-bottom: 20px;
-}
-
-.state-message-error {
-  color: #a33d3d;
-}
-
-.primary-button,
-.secondary-button {
-  min-height: 40px;
-  border: 0;
-  border-radius: 8px;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  padding: 0 14px;
-  transition-property: background-color, transform;
-  transition-duration: 160ms;
-}
-
-.primary-button {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.secondary-button {
-  background: #e8eef6;
-  color: #24344d;
-}
-
-.primary-button:hover {
-  background: #1d4ed8;
-}
-
-.secondary-button:hover {
-  background: #dfe7f2;
-}
-
-.primary-button:active,
-.secondary-button:active {
-  transform: scale(0.96);
-}
-
-@media (max-width: 700px) {
-  .top-bar {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 16px;
-  }
-}
-</style>

@@ -41,6 +41,13 @@ const statusFilters: Array<{
   { value: "cancelled", label: "Cancelled" }
 ];
 
+const statusToneClasses: Record<RelocationRequestStatus, string> = {
+  available: "status-pill-open",
+  booked: "status-pill-booked",
+  completed: "status-pill-completed",
+  cancelled: "status-pill-cancelled"
+};
+
 const statusCounts = computed(() =>
   statusFilters.map((filter) => ({
     ...filter,
@@ -181,6 +188,10 @@ function statusLabel(status: RelocationRequestStatus): string {
   )!.label;
 }
 
+function statusClass(status: RelocationRequestStatus): string {
+  return statusToneClasses[status];
+}
+
 function canCancel(request: RelocationRequest): boolean {
   return request.status === "available" || request.status === "booked";
 }
@@ -283,58 +294,67 @@ onUnmounted(() => {
           />
         </datalist>
 
-        <div v-if="requests.length > 0" class="status-tools">
-          <button
-            v-for="filter in statusCounts"
-            :key="filter.value"
-            data-test="status-filter"
-            class="filter-button"
-            :class="{ 'filter-button-active': activeStatusFilter === filter.value }"
-            type="button"
-            @click="activeStatusFilter = filter.value"
-          >
-            <span data-test="status-summary">{{ filter.label }} {{ filter.count }}</span>
-          </button>
-        </div>
+        <div
+          v-if="requests.length > 0"
+          data-test="dispatcher-controls"
+          class="dispatcher-controls"
+        >
+          <div class="status-tools" aria-label="Request status filters">
+            <button
+              v-for="filter in statusCounts"
+              :key="filter.value"
+              data-test="status-filter"
+              class="filter-button"
+              :aria-pressed="activeStatusFilter === filter.value"
+              :class="{ 'filter-button-active': activeStatusFilter === filter.value }"
+              type="button"
+              @click="activeStatusFilter = filter.value"
+            >
+              <span data-test="status-summary">
+                {{ filter.label }} {{ filter.count }}
+              </span>
+            </button>
+          </div>
 
-        <div v-if="requests.length > 0" class="filter-bar">
-          <label>
-            <span>Search</span>
-            <input
-              v-model="searchText"
-              data-test="request-search"
-              autocomplete="off"
-              type="search"
-            />
-          </label>
-          <label>
-            <span>Origin</span>
-            <input
-              v-model="filterOrigin"
-              data-test="filter-origin"
-              autocomplete="off"
-              list="relocation-place-options"
-              type="text"
-            />
-          </label>
-          <label>
-            <span>Destination</span>
-            <input
-              v-model="filterDestination"
-              data-test="filter-destination"
-              autocomplete="off"
-              list="relocation-place-options"
-              type="text"
-            />
-          </label>
-          <label>
-            <span>From</span>
-            <input v-model="filterFrom" data-test="filter-from" type="date" />
-          </label>
-          <label>
-            <span>To</span>
-            <input v-model="filterTo" data-test="filter-to" type="date" />
-          </label>
+          <div class="filter-bar">
+            <label>
+              <span>Search</span>
+              <input
+                v-model="searchText"
+                data-test="request-search"
+                autocomplete="off"
+                type="search"
+              />
+            </label>
+            <label>
+              <span>Origin</span>
+              <input
+                v-model="filterOrigin"
+                data-test="filter-origin"
+                autocomplete="off"
+                list="relocation-place-options"
+                type="text"
+              />
+            </label>
+            <label>
+              <span>Destination</span>
+              <input
+                v-model="filterDestination"
+                data-test="filter-destination"
+                autocomplete="off"
+                list="relocation-place-options"
+                type="text"
+              />
+            </label>
+            <label>
+              <span>From</span>
+              <input v-model="filterFrom" data-test="filter-from" type="date" />
+            </label>
+            <label>
+              <span>To</span>
+              <input v-model="filterTo" data-test="filter-to" type="date" />
+            </label>
+          </div>
         </div>
 
         <p v-if="requests.length === 0" class="state-message">
@@ -345,7 +365,7 @@ onUnmounted(() => {
           No relocation requests match this status.
         </p>
 
-        <div v-else class="request-list">
+        <div v-else data-test="request-table" class="request-list">
           <article
             v-for="request in filteredRequests"
             :key="request.id"
@@ -366,7 +386,11 @@ onUnmounted(() => {
                 {{ assignmentLabel(request) }}
               </p>
             </div>
-            <span data-test="status" class="status-pill">
+            <span
+              data-test="status"
+              class="status-pill"
+              :class="statusClass(request.status)"
+            >
               {{ statusLabel(request.status) }}
             </span>
             <button
@@ -396,24 +420,24 @@ onUnmounted(() => {
 <style scoped>
 .dashboard-shell {
   min-height: 100vh;
-  background: #f6f7f9;
+  background: #f5f6f8;
   color: #172033;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
-  padding: 32px;
+  padding: 24px;
 }
 
 .dashboard-panel {
-  max-width: 1040px;
+  max-width: 1180px;
   margin: 0 auto;
   background: #ffffff;
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.06),
-    0 18px 48px rgba(15, 23, 42, 0.08);
-  padding: 24px;
+    0 0 0 1px rgba(15, 23, 42, 0.06),
+    0 8px 24px rgba(15, 23, 42, 0.07);
+  padding: 20px;
 }
 
 .panel-header {
@@ -434,7 +458,8 @@ onUnmounted(() => {
 
 h1 {
   margin: 0;
-  font-size: clamp(1.6rem, 1.8vw, 2.1rem);
+  font-size: 1.5rem;
+  font-weight: 650;
   line-height: 1.1;
   letter-spacing: 0;
   text-wrap: balance;
@@ -447,29 +472,31 @@ h1 {
   border-radius: 8px;
   cursor: pointer;
   font: inherit;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 650;
   padding: 0 14px;
   transition-property: background-color, transform;
   transition-duration: 160ms;
+  transition-timing-function: ease-out;
 }
 
 .primary-button {
   align-self: end;
-  background: #2563eb;
+  background: #0f766e;
   color: #ffffff;
 }
 
 .secondary-button {
-  background: #e8eef6;
-  color: #24344d;
+  background: #f1f5f9;
+  color: #334155;
 }
 
 .primary-button:hover {
-  background: #1d4ed8;
+  background: #0d6862;
 }
 
 .secondary-button:hover {
-  background: #dfe7f2;
+  background: #e2e8f0;
 }
 
 .primary-button:active,
@@ -479,13 +506,13 @@ h1 {
 
 .request-form {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-top: 26px;
-  padding: 18px;
+  margin-top: 20px;
+  padding: 14px;
   background: #f8fafc;
-  border-radius: 12px;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.07);
 }
 
 label {
@@ -509,8 +536,12 @@ textarea {
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
   color: #172033;
   font: inherit;
+  font-size: 0.9rem;
   min-height: 40px;
   padding: 9px 11px;
+  transition-property: box-shadow, outline-color;
+  transition-duration: 140ms;
+  transition-timing-function: ease-out;
 }
 
 input:focus,
@@ -530,69 +561,94 @@ textarea {
 .state-message {
   margin: 24px 0 0;
   color: #607089;
+  font-size: 0.92rem;
 }
 
 .state-message-error {
   color: #a33d3d;
 }
 
+.dispatcher-controls {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
 .status-tools {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 20px;
 }
 
 .filter-bar {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr));
-  margin-top: 14px;
-  padding: 14px;
+  padding: 12px;
   background: #f8fafc;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .filter-button {
-  background: #eef2f7;
+  background: #f1f5f9;
   border: 0;
-  border-radius: 999px;
+  border-radius: 8px;
   color: #334155;
   cursor: pointer;
   font: inherit;
-  font-size: 0.86rem;
-  font-weight: 800;
-  min-height: 34px;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  min-height: 40px;
   padding: 0 12px;
+  transition-property: background-color, color, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
 
 .filter-button-active {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.filter-button:active {
+  transform: scale(0.96);
 }
 
 .request-list {
   display: grid;
-  gap: 10px;
-  margin-top: 24px;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 .request-row {
   align-items: center;
-  background: #f8fafc;
-  border-radius: 10px;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
-  padding: 16px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(240px, 1fr) auto auto auto;
+  padding: 12px;
+  transition-property: box-shadow, background-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.request-row:hover {
+  background: #fbfdff;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.1),
+    0 2px 5px rgba(15, 23, 42, 0.05);
 }
 
 .route {
   margin: 0;
   color: #172033;
-  font-weight: 750;
+  font-size: 0.95rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .route span {
@@ -602,7 +658,7 @@ textarea {
 
 .scheduled {
   color: #607089;
-  font-size: 0.94rem;
+  font-size: 0.86rem;
   font-variant-numeric: tabular-nums;
   margin: 6px 0 0;
 }
@@ -616,13 +672,34 @@ textarea {
 }
 
 .status-pill {
-  background: #dff5ea;
+  align-self: center;
   border-radius: 999px;
-  color: #11623f;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 750;
+  min-width: 86px;
   padding: 6px 10px;
+  text-align: center;
   text-transform: capitalize;
+}
+
+.status-pill-open {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-pill-booked {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-pill-completed {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.status-pill-cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 @media (max-width: 820px) {
@@ -649,7 +726,7 @@ textarea {
 
   .request-row {
     align-items: flex-start;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 }
 </style>

@@ -146,6 +146,37 @@ describe("RelocationDashboard", () => {
     expect(wrapper.text()).not.toContain("Bilbao Depot");
   });
 
+  it("exposes operational toolbar and pressed status filter affordances", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([
+          {
+            id: "request-open",
+            dispatcherId: "dispatcher-1",
+            origin: "Madrid Airport",
+            destination: "Barcelona Sants",
+            scheduledAt: "2026-07-09T09:30:00.000Z",
+            notes: "",
+            status: "available"
+          }
+        ])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+
+    expect(wrapper.find('[data-test="dispatcher-controls"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="request-table"]').exists()).toBe(true);
+    const openFilter = wrapper
+      .findAll('[data-test="status-filter"]')
+      .find((button) => button.text().startsWith("Open"));
+    expect(openFilter?.attributes("aria-pressed")).toBe("false");
+
+    await openFilter?.trigger("click");
+
+    expect(openFilter?.attributes("aria-pressed")).toBe("true");
+  });
+
   it("filters requests by text, origin, destination, and scheduled date window", async () => {
     const wrapper = mount(RelocationDashboard, {
       props: {

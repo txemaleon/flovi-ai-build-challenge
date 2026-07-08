@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import DispatcherApp from "./DispatcherApp.vue";
+import "./styles.css";
 import { createDispatcherRuntime } from "./runtime/createDispatcherRuntime.js";
 import { createLocalDispatcherRuntime } from "./runtime/createLocalDispatcherRuntime.js";
 import { createSupabaseBrowserClient } from "./runtime/createSupabaseBrowserClient.js";

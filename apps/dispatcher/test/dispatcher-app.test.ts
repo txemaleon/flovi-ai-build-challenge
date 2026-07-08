@@ -123,6 +123,31 @@ describe("DispatcherApp", () => {
     expect(auth.signInCount()).toBe(1);
   });
 
+  it("renders the Google sign-in action with standard button semantics", async () => {
+    const auth = createAuthService(null);
+    const wrapper = mount(DispatcherApp, {
+      props: {
+        config: {
+          supabaseUrl: "https://example.supabase.co",
+          supabaseAnonKey: "public-anon-key"
+        },
+        runtime: {
+          authService: auth.authService,
+          createRelocationService: () => createRelocationService([])
+        }
+      }
+    });
+
+    await flushPromises();
+
+    const button = wrapper.find('[data-test="google-sign-in"]');
+    expect(button.text()).toBe("Sign in with Google");
+    expect(button.attributes("aria-label")).toBe("Sign in with Google");
+    expect(button.classes()).toContain("google-sign-in-button");
+    expect(button.classes()).not.toContain("primary-button");
+    expect(button.find('[data-test="google-g-icon"]').exists()).toBe(true);
+  });
+
   it("shows a fallback session error when config exists without a runtime", async () => {
     const wrapper = mount(DispatcherApp, {
       props: {

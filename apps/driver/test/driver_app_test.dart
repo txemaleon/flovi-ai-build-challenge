@@ -395,12 +395,176 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    await tester
-        .tap(find.widgetWithText(ElevatedButton, 'Sign in with Google'));
+    await tester.tap(find.byKey(const ValueKey('google-sign-in-button')));
     await tester.pumpAndSettle();
 
     expect(find.text('Sign in with Google'), findsOneWidget);
     expect(authService.signInCalls, 1);
+  });
+
+  testWidgets('driver shell renders a standard Google sign-in button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverShell(
+          authService: FakeDriverAuthService(),
+          createGigService: (_) => InMemoryDriverGigService([]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final button = find.byKey(const ValueKey('google-sign-in-button'));
+    expect(button, findsOneWidget);
+    expect(
+      find.descendant(
+        of: button,
+        matching: find.text('Sign in with Google'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: button,
+        matching: find.byKey(const ValueKey('google-g-icon')),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('driver app keeps mobile operations sections visible', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverApp(
+          driverId: 'driver-1',
+          service: InMemoryDriverGigService([
+            DriverGig(
+              id: 'gig-available',
+              origin: 'Madrid',
+              destination: 'Barcelona',
+              scheduledAt: DateTime.utc(2026, 7, 10, 9, 30),
+              notes: 'Available request',
+              status: 'available',
+            ),
+            DriverGig(
+              id: 'gig-booked',
+              origin: 'Barcelona',
+              destination: 'Valencia',
+              scheduledAt: DateTime.utc(2026, 7, 11, 10),
+              notes: 'Booked request',
+              status: 'booked',
+              driverId: 'driver-1',
+            ),
+            DriverGig(
+              id: 'gig-completed',
+              origin: 'Valencia',
+              destination: 'Alicante',
+              scheduledAt: DateTime.utc(2026, 7, 12, 11),
+              notes: 'Completed request',
+              status: 'completed',
+              driverId: 'driver-1',
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('driver-filter-panel')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('driver-place-filter-row')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('driver-date-filter-row')), findsOneWidget);
+    expect(
+        find.byKey(const ValueKey('driver-status-navigation')), findsOneWidget);
+    expect(find.byKey(const ValueKey('available-gigs')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('booked-gigs')),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const ValueKey('booked-gigs')), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('completed-gigs')),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const ValueKey('completed-gigs')), findsOneWidget);
+  });
+
+  test('available gig grid uses mobile, tablet, and desktop breakpoints', () {
+    expect(availableGigColumnCount(390), 1);
+    expect(availableGigColumnCount(900), 3);
+    expect(availableGigColumnCount(1280), 5);
+  });
+
+  testWidgets('driver filters use two rows and available gigs fill tablet grid',
+      (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(900, 1000);
+    addTearDown(() {
+      tester.view.resetDevicePixelRatio();
+      tester.view.resetPhysicalSize();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverApp(
+          driverId: 'driver-1',
+          service: InMemoryDriverGigService([
+            for (final index in [1, 2, 3, 4])
+              DriverGig(
+                id: 'gig-$index',
+                origin: 'Madrid',
+                destination: 'Barcelona',
+                scheduledAt: DateTime.utc(2026, 7, 10, 8 + index),
+                notes: 'Available request $index',
+                status: 'available',
+              ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final originTop = tester.getTopLeft(
+      find.byKey(const ValueKey('driver-origin-filter')),
+    );
+    final destinationTop = tester.getTopLeft(
+      find.byKey(const ValueKey('driver-destination-filter')),
+    );
+    final fromTop = tester.getTopLeft(
+      find.byKey(const ValueKey('driver-from-filter')),
+    );
+    final toTop = tester.getTopLeft(
+      find.byKey(const ValueKey('driver-to-filter')),
+    );
+
+    expect(destinationTop.dy, originTop.dy);
+    expect(toTop.dy, fromTop.dy);
+    expect(fromTop.dy, greaterThan(originTop.dy));
+
+    final firstCard =
+        tester.getRect(find.byKey(const ValueKey('gig-card-gig-1')));
+    final secondCard =
+        tester.getRect(find.byKey(const ValueKey('gig-card-gig-2')));
+    final thirdCard =
+        tester.getRect(find.byKey(const ValueKey('gig-card-gig-3')));
+    final fourthCard =
+        tester.getRect(find.byKey(const ValueKey('gig-card-gig-4')));
+
+    expect(secondCard.top, firstCard.top);
+    expect(thirdCard.top, firstCard.top);
+    expect(fourthCard.top, greaterThan(firstCard.top));
+    expect(firstCard.width, greaterThan(250));
   });
 
   testWidgets('driver shell renders signed-in gigs for the current driver', (
@@ -438,6 +602,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Madrid Chamartin to Seville Station'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('booked-gigs')),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('booked-gigs')),
@@ -529,8 +698,7 @@ void main() {
     );
 
     await tester.pumpAndSettle();
-    await tester
-        .tap(find.widgetWithText(ElevatedButton, 'Sign in with Google'));
+    await tester.tap(find.byKey(const ValueKey('google-sign-in-button')));
     await tester.pumpAndSettle();
 
     expect(find.text('OAuth failed'), findsOneWidget);

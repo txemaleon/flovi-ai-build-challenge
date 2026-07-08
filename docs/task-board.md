@@ -172,6 +172,18 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 14
 
+## Slice 15 - UI Polish And Standard Google Sign-In
+
+- [x] Confirm Slice 15 scope: UI polish only, no backend semantics
+- [x] RED/GREEN: standard Google sign-in affordance tests for dispatcher and driver
+- [x] RED/GREEN: dispatcher operational layout affordance tests
+- [x] RED/GREEN: driver mobile operations layout tests
+- [x] Add Tailwind-backed dispatcher styling with local shadcn-style primitives
+- [x] Mirror design tokens in Flutter ThemeData and widgets
+- [x] Capture required UI screenshots under `docs/assets/ui-polish`
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 15
+
 ## Later Slices
 
 - [ ] Deployment and public demo URLs
