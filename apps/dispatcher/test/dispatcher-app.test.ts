@@ -15,6 +15,9 @@ function createRelocationService(
     listRelocationRequests: async () => requests,
     createRelocationRequest: async () => {
       throw new Error("create is not used in this test");
+    },
+    updateRelocationRequest: async () => {
+      throw new Error("update is not used in this test");
     }
   };
 }

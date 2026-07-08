@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   InMemoryRelocationRequestRepository,
   createRelocationRequest,
-  listRelocationRequests
+  listRelocationRequests,
+  updateRelocationRequest
 } from "../../src/relocations/index.js";
 
 describe("dispatcher relocation request workflow", () => {
@@ -76,5 +77,113 @@ describe("dispatcher relocation request workflow", () => {
         { relocationRequests: new InMemoryRelocationRequestRepository() }
       )
     ).rejects.toThrow("No runtime UUID generator is available.");
+  });
+
+  it("updates an existing relocation request and preserves its status", async () => {
+    const relocationRequests = new InMemoryRelocationRequestRepository();
+    const created = await createRelocationRequest(
+      {
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z",
+        notes: "Vehicle is parked in short stay."
+      },
+      {
+        relocationRequests,
+        generateId: () => "request-123"
+      }
+    );
+
+    const updated = await updateRelocationRequest(
+      {
+        id: created.id,
+        origin: "Madrid Chamartin",
+        destination: "Valencia Port",
+        scheduledAt: "2026-07-10T15:00:00.000Z",
+        notes: "Bring parking ticket."
+      },
+      { relocationRequests }
+    );
+
+    expect(updated).toEqual({
+      id: "request-123",
+      dispatcherId: "dispatcher-123",
+      origin: "Madrid Chamartin",
+      destination: "Valencia Port",
+      scheduledAt: "2026-07-10T15:00:00.000Z",
+      notes: "Bring parking ticket.",
+      status: "available"
+    });
+    await expect(
+      listRelocationRequests({ relocationRequests })
+    ).resolves.toEqual([updated]);
+  });
+
+  it("surfaces relocation request update errors clearly", async () => {
+    const relocationRequests = {
+      save: async () => undefined,
+      list: async () => [],
+      update: async () => {
+        throw new Error("database unavailable");
+      }
+    };
+
+    await expect(
+      updateRelocationRequest(
+        {
+          id: "request-404",
+          origin: "Madrid Chamartin",
+          destination: "Valencia Port",
+          scheduledAt: "2026-07-10T15:00:00.000Z",
+          notes: "Bring parking ticket."
+        },
+        { relocationRequests }
+      )
+    ).rejects.toThrow(
+      "Failed to update relocation request: database unavailable"
+    );
+  });
+
+  it("surfaces missing in-memory relocation request updates clearly", async () => {
+    const relocationRequests = new InMemoryRelocationRequestRepository();
+
+    await expect(
+      updateRelocationRequest(
+        {
+          id: "request-404",
+          origin: "Madrid Chamartin",
+          destination: "Valencia Port",
+          scheduledAt: "2026-07-10T15:00:00.000Z",
+          notes: "Bring parking ticket."
+        },
+        { relocationRequests }
+      )
+    ).rejects.toThrow(
+      "Failed to update relocation request: Relocation request not found."
+    );
+  });
+
+  it("uses a fallback message when update rejects without an Error", async () => {
+    const relocationRequests = {
+      save: async () => undefined,
+      list: async () => [],
+      update: async () => {
+        throw "offline";
+      }
+    };
+
+    await expect(
+      updateRelocationRequest(
+        {
+          id: "request-404",
+          origin: "Madrid Chamartin",
+          destination: "Valencia Port",
+          scheduledAt: "2026-07-10T15:00:00.000Z",
+          notes: "Bring parking ticket."
+        },
+        { relocationRequests }
+      )
+    ).rejects.toThrow("Failed to update relocation request: unknown error");
   });
 });

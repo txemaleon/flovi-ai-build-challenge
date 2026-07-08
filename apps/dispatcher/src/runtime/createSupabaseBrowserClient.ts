@@ -9,7 +9,12 @@ export type DispatcherSupabaseClient = DispatcherAuthClient &
 export function createSupabaseBrowserClient(
   config: Required<DispatcherAppConfig>
 ): DispatcherSupabaseClient {
-  return createClient(
+  const createSupabaseClient = createClient as (
+    supabaseUrl: string,
+    supabaseKey: string
+  ) => unknown;
+
+  return createSupabaseClient(
     config.supabaseUrl,
     config.supabaseAnonKey
   ) as DispatcherSupabaseClient;

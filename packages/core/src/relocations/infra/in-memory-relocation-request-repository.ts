@@ -1,4 +1,5 @@
 import type { RelocationRequestRepository } from "../application/ports/relocation-request-repository.js";
+import type { UpdateRelocationRequestFields } from "../application/update-relocation-request.js";
 import type { RelocationRequest } from "../domain/relocation-request.js";
 
 export class InMemoryRelocationRequestRepository
@@ -12,5 +13,27 @@ export class InMemoryRelocationRequestRepository
 
   async list(): Promise<RelocationRequest[]> {
     return [...this.requests.values()];
+  }
+
+  async update(
+    request: UpdateRelocationRequestFields
+  ): Promise<RelocationRequest> {
+    const existing = this.requests.get(request.id);
+
+    if (!existing) {
+      throw new Error("Relocation request not found.");
+    }
+
+    const updated: RelocationRequest = {
+      ...existing,
+      origin: request.origin,
+      destination: request.destination,
+      scheduledAt: request.scheduledAt,
+      notes: request.notes
+    };
+
+    this.requests.set(updated.id, updated);
+
+    return updated;
   }
 }

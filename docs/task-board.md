@@ -52,9 +52,25 @@
 - [x] Run tests, coverage, typecheck, and dispatcher build
 - [x] Commit Slice 4
 
+## Slice 5 - Dispatcher Edits Existing Requests
+
+- [x] Confirm Slice 5 scope: core relocation context and dispatcher app only
+- [x] RED: add core application-boundary update tests
+- [x] GREEN: update relocation request through core application boundary
+- [x] GREEN: preserve existing request status while editing fields
+- [x] GREEN: surface repository update errors clearly
+- [x] RED/GREEN: update in-memory relocation repository adapter
+- [x] RED: add Supabase update adapter tests with fake client
+- [x] GREEN: update Supabase relocation repository adapter
+- [x] RED/GREEN: open populated dispatcher edit form
+- [x] RED/GREEN: save edits and refresh visible list
+- [x] RED/GREEN: cancel edit mode without saving
+- [x] RED/GREEN: show clear update failure message
+- [x] Run tests, coverage, typecheck, and dispatcher build
+- [x] Commit Slice 5
+
 ## Later Slices
 
-- [ ] Dispatcher edits and updates relocation requests
 - [ ] Driver browses available unbooked gigs
 - [ ] Driver books a gig with one-tap confirmation
 - [ ] Driver views booked gigs

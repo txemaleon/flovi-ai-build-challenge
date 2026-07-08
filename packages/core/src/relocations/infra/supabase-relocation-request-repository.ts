@@ -1,4 +1,5 @@
 import type { RelocationRequestRepository } from "../application/ports/relocation-request-repository.js";
+import type { UpdateRelocationRequestFields } from "../application/update-relocation-request.js";
 import type { RelocationRequest } from "../domain/relocation-request.js";
 
 type SupabaseError = Readonly<{
@@ -17,6 +18,16 @@ type SupabaseQueryResult<Row> = Readonly<{
 export type SupabaseRelocationRequestClient = Readonly<{
   from(table: "relocation_requests"): {
     insert(row: RelocationRequestRow): PromiseLike<SupabaseMutationResult>;
+    update(row: RelocationRequestUpdateRow): {
+      eq(column: "id", value: string): {
+        select(columns?: string): {
+          single(): PromiseLike<{
+            data: RelocationRequestRow | null;
+            error: SupabaseError | null;
+          }>;
+        };
+      };
+    };
     select(columns: string): {
       order(
         column: "scheduled_at",
@@ -29,6 +40,14 @@ export type SupabaseRelocationRequestClient = Readonly<{
 type RelocationRequestRow = Readonly<{
   id: string;
   dispatcher_id: string;
+  origin: string;
+  destination: string;
+  scheduled_at: string;
+  notes: string;
+  status: "available";
+}>;
+
+type RelocationRequestUpdateRow = Readonly<{
   origin: string;
   destination: string;
   scheduled_at: string;
@@ -70,6 +89,23 @@ export class SupabaseRelocationRequestRepository
 
     return result.data.map(toRelocationRequest);
   }
+
+  async update(
+    request: UpdateRelocationRequestFields
+  ): Promise<RelocationRequest> {
+    const result = await this.supabase
+      .from("relocation_requests")
+      .update(toRelocationRequestUpdateRow(request))
+      .eq("id", request.id)
+      .select(relocationRequestColumns)
+      .single();
+
+    if (result.error) {
+      throw new Error("Unable to update relocation request.");
+    }
+
+    return toRelocationRequest(result.data!);
+  }
 }
 
 function toRelocationRequestRow(
@@ -95,5 +131,17 @@ function toRelocationRequest(row: RelocationRequestRow): RelocationRequest {
     scheduledAt: row.scheduled_at,
     notes: row.notes,
     status: row.status
+  };
+}
+
+function toRelocationRequestUpdateRow(
+  request: UpdateRelocationRequestFields
+): RelocationRequestUpdateRow {
+  return {
+    origin: request.origin,
+    destination: request.destination,
+    scheduled_at: request.scheduledAt,
+    notes: request.notes,
+    status: request.status ?? "available"
   };
 }

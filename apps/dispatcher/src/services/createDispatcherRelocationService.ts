@@ -1,6 +1,7 @@
 import {
   createRelocationRequest,
   listRelocationRequests,
+  updateRelocationRequest,
   type RelocationRequestRepository
 } from "@flovi/core";
 import type { DispatcherRelocationService } from "./dispatcherRelocationService.js";
@@ -31,6 +32,19 @@ export function createDispatcherRelocationService(
         {
           relocationRequests: options.relocationRequests,
           generateId: options.generateId
+        }
+      ),
+    updateRelocationRequest: (input) =>
+      updateRelocationRequest(
+        {
+          id: input.id,
+          origin: input.origin,
+          destination: input.destination,
+          scheduledAt: input.scheduledAt,
+          notes: input.notes
+        },
+        {
+          relocationRequests: options.relocationRequests
         }
       )
   };

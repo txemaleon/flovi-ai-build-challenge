@@ -14,6 +14,7 @@ const origin = ref("");
 const destination = ref("");
 const scheduledAt = ref("");
 const notes = ref("");
+const editingRequestId = ref<string | null>(null);
 
 async function loadRequests() {
   isLoading.value = true;
@@ -32,19 +33,34 @@ async function loadRequests() {
 }
 
 async function submitRequest() {
-  await props.service.createRelocationRequest({
-    origin: origin.value,
-    destination: destination.value,
-    scheduledAt: toUtcIsoString(scheduledAt.value),
-    notes: notes.value
-  });
+  errorMessage.value = "";
 
-  origin.value = "";
-  destination.value = "";
-  scheduledAt.value = "";
-  notes.value = "";
+  try {
+    if (editingRequestId.value) {
+      await props.service.updateRelocationRequest({
+        id: editingRequestId.value,
+        origin: origin.value,
+        destination: destination.value,
+        scheduledAt: toUtcIsoString(scheduledAt.value),
+        notes: notes.value
+      });
+    } else {
+      await props.service.createRelocationRequest({
+        origin: origin.value,
+        destination: destination.value,
+        scheduledAt: toUtcIsoString(scheduledAt.value),
+        notes: notes.value
+      });
+    }
 
-  await loadRequests();
+    resetForm();
+    await loadRequests();
+  } catch (error) {
+    errorMessage.value =
+      error instanceof Error
+        ? error.message
+        : "Unable to save relocation request.";
+  }
 }
 
 function formatScheduledAt(value: string): string {
@@ -61,6 +77,31 @@ function formatScheduledAt(value: string): string {
 
 function toUtcIsoString(value: string): string {
   return `${value}:00.000Z`;
+}
+
+function toDateTimeLocal(value: string): string {
+  return value.slice(0, 16);
+}
+
+function editRequest(request: RelocationRequest) {
+  editingRequestId.value = request.id;
+  origin.value = request.origin;
+  destination.value = request.destination;
+  scheduledAt.value = toDateTimeLocal(request.scheduledAt);
+  notes.value = request.notes;
+  errorMessage.value = "";
+}
+
+function cancelEdit() {
+  resetForm();
+}
+
+function resetForm() {
+  editingRequestId.value = null;
+  origin.value = "";
+  destination.value = "";
+  scheduledAt.value = "";
+  notes.value = "";
 }
 
 onMounted(loadRequests);
@@ -117,7 +158,18 @@ onMounted(loadRequests);
           <span>Notes</span>
           <textarea v-model="notes" data-test="notes" rows="3" />
         </label>
-        <button class="primary-button" type="submit">Create request</button>
+        <button class="primary-button" type="submit">
+          {{ editingRequestId ? "Save changes" : "Create request" }}
+        </button>
+        <button
+          v-if="editingRequestId"
+          data-test="cancel-edit"
+          class="secondary-button"
+          type="button"
+          @click="cancelEdit"
+        >
+          Cancel
+        </button>
       </form>
 
       <p v-if="isLoading" class="state-message">Loading relocation requests...</p>
@@ -146,6 +198,14 @@ onMounted(loadRequests);
           <span data-test="status" class="status-pill">
             {{ request.status }}
           </span>
+          <button
+            data-test="edit-request"
+            class="secondary-button"
+            type="button"
+            @click="editRequest(request)"
+          >
+            Edit
+          </button>
         </article>
       </div>
     </section>

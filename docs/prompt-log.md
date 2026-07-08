@@ -145,3 +145,35 @@ Delivery:
 - Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
 - Verification: `npm run dispatcher:build` passed; Vite built `dist/index.html`, CSS bundle, and JS bundle successfully.
 - Closeout: the verification results above were confirmed by a final root-level rerun in this thread immediately before the Slice 4 commit.
+
+## 2026-07-08 - Slice 5
+
+Prompt: implement only the dispatcher edit workflow for "Dispatcher users can edit an existing relocation request, save changes, and see the refreshed list."
+
+Constraints:
+
+- Scope is core relocation context and dispatcher app only.
+- Do not build the driver app.
+- Do not add booking flow or status-transition workflow.
+- Keep tests network-free.
+- Preserve existing request status when editing origin, destination, scheduled date/time, and notes.
+- Extend repository/application boundaries minimally.
+- Keep the current database schema unless a migration is strictly required.
+- Keep `RelocationDashboard` focused on relocation workflow and avoid broad UI restyling.
+- Run `npm test`, `npm run coverage`, `npm run typecheck`, and `npm run dispatcher:build` from the repo root before committing.
+- Require 100% statements, branches, functions, and lines for owned source before committing.
+
+Delivery:
+
+- Added `updateRelocationRequest` to the core relocation application boundary with clear repository error wrapping.
+- Extended `RelocationRequestRepository` minimally with `update(request)`.
+- Updated the in-memory repository to edit origin, destination, scheduled time, and notes while preserving the existing status.
+- Added Supabase repository update support using snake_case payload columns, `.eq("id", request.id)` scoping, and a clear update failure error. No database schema migration was required because the existing table already contains the editable columns and Slice 4 grants already include `update`.
+- Extended the dispatcher app-level relocation service with `updateRelocationRequest` and wired it through the real core application boundary.
+- Added dispatcher edit mode in `RelocationDashboard`: each request has an edit action, the form is populated from the selected request, save updates and refreshes the list, cancel returns to create mode without saving, and update failures render a clear message.
+- Coverage correction: added focused tests for reachable fallback branches in dashboard save errors, core update error wrapping, missing in-memory update targets, and Supabase update default status.
+- Typecheck correction: updated Slice 5 test fakes for the new update contract and kept the Supabase browser client behind the existing structural boundary to avoid deep SDK type instantiation.
+- Verification: `npm test` passed with dispatcher 5 test files / 34 tests and core 2 test files / 14 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(115/115)`, 100% branches `(86/86)`, 100% functions `(37/37)`, 100% lines `(113/113)`. Core coverage: 100% statements `(40/40)`, 100% branches `(18/18)`, 100% functions `(15/15)`, 100% lines `(40/40)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run dispatcher:build` passed; Vite built `dist/index.html`, `dist/assets/index-6o2Ws50y.css`, and `dist/assets/index-DJnw6MLz.js` successfully.

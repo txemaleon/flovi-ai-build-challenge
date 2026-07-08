@@ -24,6 +24,9 @@ type SelectResult = Readonly<{
 
 class FakeSupabaseClient {
   readonly inserts: unknown[] = [];
+  readonly updates: unknown[] = [];
+  readonly updateFilters: Array<Readonly<{ column: string; value: unknown }>> =
+    [];
   readonly selectedColumns: string[] = [];
   readonly orderedBy: Array<Readonly<{ column: string; ascending: boolean }>> =
     [];
@@ -31,7 +34,8 @@ class FakeSupabaseClient {
 
   constructor(
     private readonly insertResult: InsertResult = { error: null },
-    private readonly selectResult: SelectResult = { data: [], error: null }
+    private readonly selectResult: SelectResult = { data: [], error: null },
+    private readonly updateResult: SelectResult = { data: [], error: null }
   ) {}
 
   from(table: string) {
@@ -41,6 +45,24 @@ class FakeSupabaseClient {
       insert: async (row: unknown) => {
         this.inserts.push(row);
         return this.insertResult;
+      },
+      update: (row: unknown) => {
+        this.updates.push(row);
+
+        return {
+          eq: (column: string, value: unknown) => {
+            this.updateFilters.push({ column, value });
+
+            return {
+              select: () => ({
+                single: async () => ({
+                  data: this.updateResult.data[0] ?? null,
+                  error: this.updateResult.error
+                })
+              })
+            };
+          }
+        };
       },
       select: (columns: string) => {
         this.selectedColumns.push(columns);
@@ -161,5 +183,124 @@ describe("SupabaseRelocationRequestRepository", () => {
     await expect(repository.list()).rejects.toThrow(
       "Failed to list relocation requests from Supabase: network unavailable"
     );
+  });
+
+  it("updates a relocation request using snake_case columns scoped by id", async () => {
+    const supabase = new FakeSupabaseClient(
+      { error: null },
+      { data: [], error: null },
+      {
+        data: [
+          {
+            id: "request-123",
+            dispatcher_id: "dispatcher-123",
+            origin: "Madrid Chamartin",
+            destination: "Valencia Port",
+            scheduled_at: "2026-07-10T15:00:00.000Z",
+            notes: "Bring parking ticket.",
+            status: "available"
+          }
+        ],
+        error: null
+      }
+    );
+    const repository = new SupabaseRelocationRequestRepository(supabase);
+
+    await expect(
+      repository.update({
+        id: "request-123",
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Chamartin",
+        destination: "Valencia Port",
+        scheduledAt: "2026-07-10T15:00:00.000Z",
+        notes: "Bring parking ticket.",
+        status: "available"
+      })
+    ).resolves.toEqual({
+      id: "request-123",
+      dispatcherId: "dispatcher-123",
+      origin: "Madrid Chamartin",
+      destination: "Valencia Port",
+      scheduledAt: "2026-07-10T15:00:00.000Z",
+      notes: "Bring parking ticket.",
+      status: "available"
+    });
+    expect(supabase.tables).toEqual(["relocation_requests"]);
+    expect(supabase.updates).toEqual([
+      {
+        origin: "Madrid Chamartin",
+        destination: "Valencia Port",
+        scheduled_at: "2026-07-10T15:00:00.000Z",
+        notes: "Bring parking ticket.",
+        status: "available"
+      }
+    ]);
+    expect(supabase.updateFilters).toEqual([
+      { column: "id", value: "request-123" }
+    ]);
+  });
+
+  it("defaults the Supabase update status when the input does not include one", async () => {
+    const supabase = new FakeSupabaseClient(
+      { error: null },
+      { data: [], error: null },
+      {
+        data: [
+          {
+            id: "request-123",
+            dispatcher_id: "dispatcher-123",
+            origin: "Madrid Chamartin",
+            destination: "Valencia Port",
+            scheduled_at: "2026-07-10T15:00:00.000Z",
+            notes: "Bring parking ticket.",
+            status: "available"
+          }
+        ],
+        error: null
+      }
+    );
+    const repository = new SupabaseRelocationRequestRepository(supabase);
+
+    await repository.update({
+      id: "request-123",
+      origin: "Madrid Chamartin",
+      destination: "Valencia Port",
+      scheduledAt: "2026-07-10T15:00:00.000Z",
+      notes: "Bring parking ticket."
+    });
+
+    expect(supabase.updates).toEqual([
+      {
+        origin: "Madrid Chamartin",
+        destination: "Valencia Port",
+        scheduled_at: "2026-07-10T15:00:00.000Z",
+        notes: "Bring parking ticket.",
+        status: "available"
+      }
+    ]);
+  });
+
+  it("surfaces Supabase update failures clearly", async () => {
+    const supabase = new FakeSupabaseClient(
+      { error: null },
+      { data: [], error: null },
+      {
+        data: [],
+        error: { message: "row update denied" }
+      }
+    );
+    const repository = new SupabaseRelocationRequestRepository(supabase);
+
+    await expect(
+      repository.update({
+        id: "request-123",
+        dispatcherId: "dispatcher-123",
+        origin: "Madrid Chamartin",
+        destination: "Valencia Port",
+        scheduledAt: "2026-07-10T15:00:00.000Z",
+        notes: "Bring parking ticket.",
+        status: "available"
+      })
+    ).rejects.toThrow("Unable to update relocation request.");
   });
 });

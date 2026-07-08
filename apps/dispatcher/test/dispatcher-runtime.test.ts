@@ -28,6 +28,13 @@ class FakeSupabaseClient {
         this.inserts.push({ table, row });
         return { error: null };
       },
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            single: async () => ({ data: null, error: null })
+          })
+        })
+      }),
       select: () => ({
         order: async () => ({ data: [], error: null })
       })

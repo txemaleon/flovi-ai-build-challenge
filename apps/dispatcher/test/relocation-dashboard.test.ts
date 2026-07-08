@@ -11,6 +11,9 @@ function createService(
     listRelocationRequests: async () => requests,
     createRelocationRequest: async () => {
       throw new Error("create is not used in this test");
+    },
+    updateRelocationRequest: async () => {
+      throw new Error("update is not used in this test");
     }
   };
 }
@@ -52,6 +55,9 @@ describe("RelocationDashboard", () => {
             }),
           createRelocationRequest: async () => {
             throw new Error("create is not used in this test");
+          },
+          updateRelocationRequest: async () => {
+            throw new Error("update is not used in this test");
           }
         }
       }
@@ -76,6 +82,9 @@ describe("RelocationDashboard", () => {
           },
           createRelocationRequest: async () => {
             throw new Error("create is not used in this test");
+          },
+          updateRelocationRequest: async () => {
+            throw new Error("update is not used in this test");
           }
         }
       }
@@ -95,6 +104,9 @@ describe("RelocationDashboard", () => {
           },
           createRelocationRequest: async () => {
             throw new Error("create is not used in this test");
+          },
+          updateRelocationRequest: async () => {
+            throw new Error("update is not used in this test");
           }
         }
       }
@@ -126,6 +138,9 @@ describe("RelocationDashboard", () => {
             };
             requests.push(created);
             return created;
+          },
+          updateRelocationRequest: async () => {
+            throw new Error("update is not used in this test");
           }
         }
       }
@@ -150,5 +165,191 @@ describe("RelocationDashboard", () => {
     expect(wrapper.text()).toContain("Bilbao Depot");
     expect(wrapper.text()).toContain("San Sebastian");
     expect(wrapper.text()).toContain("Jul 12, 2026, 08:15");
+  });
+
+  it("opens a populated edit form for an existing relocation request", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([
+          {
+            id: "request-1",
+            dispatcherId: "dispatcher-1",
+            origin: "Madrid Airport",
+            destination: "Barcelona Sants",
+            scheduledAt: "2026-07-09T09:30:00.000Z",
+            notes: "Vehicle is parked in short stay.",
+            status: "available"
+          }
+        ])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="edit-request"]').trigger("click");
+
+    expect(
+      (wrapper.find('[data-test="origin"]').element as HTMLInputElement).value
+    ).toBe("Madrid Airport");
+    expect(
+      (wrapper.find('[data-test="destination"]').element as HTMLInputElement)
+        .value
+    ).toBe("Barcelona Sants");
+    expect(
+      (wrapper.find('[data-test="scheduled-at"]').element as HTMLInputElement)
+        .value
+    ).toBe("2026-07-09T09:30");
+    expect(
+      (wrapper.find('[data-test="notes"]').element as HTMLTextAreaElement).value
+    ).toBe("Vehicle is parked in short stay.");
+  });
+
+  it("saves an edited relocation request and refreshes the visible list", async () => {
+    const requests: RelocationRequest[] = [
+      {
+        id: "request-1",
+        dispatcherId: "dispatcher-1",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z",
+        notes: "Vehicle is parked in short stay.",
+        status: "available"
+      }
+    ];
+    const updatedInputs: unknown[] = [];
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: {
+          listRelocationRequests: async () => requests,
+          createRelocationRequest: async () => {
+            throw new Error("create is not used in this test");
+          },
+          updateRelocationRequest: async (input) => {
+            updatedInputs.push(input);
+            const updated: RelocationRequest = {
+              id: input.id,
+              dispatcherId: "dispatcher-1",
+              origin: input.origin,
+              destination: input.destination,
+              scheduledAt: input.scheduledAt,
+              notes: input.notes,
+              status: "available"
+            };
+            requests.splice(0, requests.length, updated);
+            return updated;
+          }
+        }
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="edit-request"]').trigger("click");
+    await wrapper.find('[data-test="origin"]').setValue("Madrid Chamartin");
+    await wrapper.find('[data-test="destination"]').setValue("Valencia Port");
+    await wrapper
+      .find('[data-test="scheduled-at"]')
+      .setValue("2026-07-10T15:00");
+    await wrapper.find('[data-test="notes"]').setValue("Bring parking ticket.");
+    await wrapper.find('[data-test="request-form"]').trigger("submit");
+
+    expect(updatedInputs).toEqual([
+      {
+        id: "request-1",
+        origin: "Madrid Chamartin",
+        destination: "Valencia Port",
+        scheduledAt: "2026-07-10T15:00:00.000Z",
+        notes: "Bring parking ticket."
+      }
+    ]);
+    expect(wrapper.text()).toContain("Madrid Chamartin");
+    expect(wrapper.text()).toContain("Valencia Port");
+  });
+
+  it("cancels edit mode without saving", async () => {
+    let updateCalls = 0;
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: {
+          ...createService([
+            {
+              id: "request-1",
+              dispatcherId: "dispatcher-1",
+              origin: "Madrid Airport",
+              destination: "Barcelona Sants",
+              scheduledAt: "2026-07-09T09:30:00.000Z",
+              notes: "Vehicle is parked in short stay.",
+              status: "available"
+            }
+          ]),
+          updateRelocationRequest: async () => {
+            updateCalls += 1;
+            throw new Error("update should not be called");
+          }
+        }
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="edit-request"]').trigger("click");
+    await wrapper.find('[data-test="cancel-edit"]').trigger("click");
+    await wrapper.find('[data-test="origin"]').setValue("New request");
+    await wrapper.find('[data-test="destination"]').setValue("New destination");
+
+    expect(wrapper.text()).toContain("Create request");
+    expect(updateCalls).toBe(0);
+  });
+
+  it("shows a clear message when update fails", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: {
+          ...createService([
+            {
+              id: "request-1",
+              dispatcherId: "dispatcher-1",
+              origin: "Madrid Airport",
+              destination: "Barcelona Sants",
+              scheduledAt: "2026-07-09T09:30:00.000Z",
+              notes: "Vehicle is parked in short stay.",
+              status: "available"
+            }
+          ]),
+          updateRelocationRequest: async () => {
+            throw new Error("Unable to update relocation request.");
+          }
+        }
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="edit-request"]').trigger("click");
+    await wrapper.find('[data-test="origin"]').setValue("Madrid Chamartin");
+    await wrapper.find('[data-test="request-form"]').trigger("submit");
+
+    expect(wrapper.text()).toContain("Unable to update relocation request.");
+  });
+
+  it("shows a fallback message when saving rejects without an Error", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: {
+          listRelocationRequests: async () => [],
+          createRelocationRequest: async () => {
+            throw "offline";
+          },
+          updateRelocationRequest: async () => {
+            throw new Error("update is not used in this test");
+          }
+        }
+      }
+    });
+
+    await wrapper.find('[data-test="origin"]').setValue("Bilbao Depot");
+    await wrapper.find('[data-test="destination"]').setValue("San Sebastian");
+    await wrapper
+      .find('[data-test="scheduled-at"]')
+      .setValue("2026-07-12T08:15");
+    await wrapper.find('[data-test="request-form"]').trigger("submit");
+
+    expect(wrapper.text()).toContain("Unable to save relocation request.");
   });
 });
