@@ -6,6 +6,7 @@ import type {
   DispatcherSession
 } from "./auth/createDispatcherAuthService.js";
 import type { DispatcherRelocationService } from "./services/dispatcherRelocationService.js";
+import type { DispatcherRealtimeService } from "./services/dispatcherRealtimeService.js";
 
 export type DispatcherAppConfig = Readonly<{
   supabaseUrl?: string;
@@ -14,6 +15,7 @@ export type DispatcherAppConfig = Readonly<{
 
 export type DispatcherRuntime = Readonly<{
   authService: DispatcherAuthService;
+  realtimeService?: DispatcherRealtimeService;
   createRelocationService(
     session: DispatcherSession
   ): DispatcherRelocationService;
@@ -152,7 +154,10 @@ function setSession(nextSession: DispatcherSession | null) {
       <p v-if="authError" class="state-message state-message-error">
         {{ authError }}
       </p>
-      <RelocationDashboard :service="relocationService" />
+      <RelocationDashboard
+        :realtime-service="runtime?.realtimeService"
+        :service="relocationService"
+      />
     </section>
   </main>
 </template>

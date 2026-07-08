@@ -267,3 +267,30 @@ Delivery:
 - Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 9 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
+## 2026-07-08 - Slice 9
+
+Prompt: refresh dispatcher and driver relocation lists when `relocation_requests` changes in Supabase realtime.
+
+Constraints:
+
+- Add app-level realtime boundaries for relocation request changes.
+- Dispatcher subscribes to `public.relocation_requests`, refreshes after insert/update/delete events, and cleans up on unmount.
+- Driver subscribes when signed in, refreshes available/booked lists after changes, and cleans up on dispose/sign-out.
+- Keep tests network-free with fake realtime services/clients.
+- Do not add statuses, redesign UI, add deployment work, or commit secrets.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added `DispatcherRealtimeService` and `createDispatcherRealtimeService` using Supabase realtime `postgres_changes` on `public.relocation_requests`.
+- Wired dispatcher runtime to expose the realtime service and `RelocationDashboard` to refresh its list on realtime changes and unsubscribe on unmount.
+- Added dispatcher tests proving refresh-on-change and cleanup with fakes, plus runtime tests proving subscribe/emit/unsubscribe wiring against a fake Supabase client.
+- Added `DriverRealtimeService` and `SupabaseDriverRealtimeService` using `onPostgresChanges` on `public.relocation_requests`.
+- Wired `DriverApp` to refresh available/booked lists on realtime changes and unsubscribe in `dispose`; `DriverShell` passes a realtime service only for signed-in sessions.
+- Added Flutter tests proving driver refresh-on-change, cleanup on widget dispose, and cleanup on sign-out.
+- Verification: `npm test` passed with dispatcher 5 test files / 36 tests and core 2 test files / 21 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(124/124)`, 100% branches `(86/86)`, 100% functions `(43/43)`, 100% lines `(122/122)`. Core coverage: 100% statements `(60/60)`, 100% branches `(30/30)`, 100% functions `(24/24)`, 100% lines `(60/60)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 11 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import type { RelocationRequest } from "@flovi/core";
 import type { DispatcherRelocationService } from "./services/dispatcherRelocationService.js";
+import type { DispatcherRealtimeService } from "./services/dispatcherRealtimeService.js";
 
 const props = defineProps<{
   service: DispatcherRelocationService;
+  realtimeService?: DispatcherRealtimeService;
 }>();
 
 const requests = ref<RelocationRequest[]>([]);
@@ -15,6 +17,7 @@ const destination = ref("");
 const scheduledAt = ref("");
 const notes = ref("");
 const editingRequestId = ref<string | null>(null);
+let unsubscribeFromRealtime: (() => void) | undefined;
 
 async function loadRequests() {
   isLoading.value = true;
@@ -104,7 +107,17 @@ function resetForm() {
   notes.value = "";
 }
 
-onMounted(loadRequests);
+onMounted(() => {
+  void loadRequests();
+  unsubscribeFromRealtime =
+    props.realtimeService?.subscribeToRelocationRequestChanges(() => {
+      void loadRequests();
+    });
+});
+
+onUnmounted(() => {
+  unsubscribeFromRealtime?.();
+});
 </script>
 
 <template>

@@ -3,6 +3,7 @@ import {
   createDispatcherAuthService,
   type DispatcherSession
 } from "../auth/createDispatcherAuthService.js";
+import { createDispatcherRealtimeService } from "../services/createDispatcherRealtimeService.js";
 import { createDispatcherRelocationService } from "../services/createDispatcherRelocationService.js";
 import type { DispatcherRuntime } from "../DispatcherApp.vue";
 import type { DispatcherSupabaseClient } from "./createSupabaseBrowserClient.js";
@@ -17,6 +18,7 @@ export function createDispatcherRuntime(
 ): DispatcherRuntime {
   return {
     authService: createDispatcherAuthService(supabase),
+    realtimeService: createDispatcherRealtimeService(supabase),
     createRelocationService: (session: DispatcherSession) =>
       createDispatcherRelocationService({
         dispatcherId: session.user.id,

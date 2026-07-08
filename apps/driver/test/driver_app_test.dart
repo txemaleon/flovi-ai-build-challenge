@@ -133,6 +133,53 @@ void main() {
     );
   });
 
+  testWidgets('driver app refreshes gigs after realtime changes and cleans up',
+      (
+    tester,
+  ) async {
+    final gigs = [
+      DriverGig(
+        id: 'gig-available',
+        origin: 'Madrid Chamartin',
+        destination: 'Seville Station',
+        scheduledAt: DateTime.utc(2026, 7, 10, 9, 30),
+        notes: 'Available request',
+        status: 'available',
+      ),
+    ];
+    final realtimeService = FakeDriverRealtimeService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverApp(
+          driverId: 'driver-1',
+          realtimeService: realtimeService,
+          service: InMemoryDriverGigService(gigs),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    gigs
+      ..clear()
+      ..add(
+        DriverGig(
+          id: 'gig-new',
+          origin: 'Valencia Port',
+          destination: 'Madrid Chamartin',
+          scheduledAt: DateTime.utc(2026, 7, 11, 12),
+          notes: 'Realtime request',
+          status: 'available',
+        ),
+      );
+    realtimeService.emitChange();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Valencia Port to Madrid Chamartin'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(realtimeService.unsubscribeCalls, 1);
+  });
+
   testWidgets('driver shell shows Google sign-in when signed out', (
     tester,
   ) async {
@@ -225,6 +272,31 @@ void main() {
     expect(find.text('Sign in with Google'), findsOneWidget);
   });
 
+  testWidgets('driver shell cleans up realtime subscription on sign-out', (
+    tester,
+  ) async {
+    final realtimeService = FakeDriverRealtimeService();
+    final authService = FakeDriverAuthService(
+      session: const DriverSession(userId: 'driver-1'),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverShell(
+          authService: authService,
+          createGigService: (_) => InMemoryDriverGigService([]),
+          createRealtimeService: (_) => realtimeService,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Sign out'));
+    await tester.pumpAndSettle();
+
+    expect(realtimeService.unsubscribeCalls, 1);
+  });
+
   testWidgets('driver app shows a clear gig loading error', (
     tester,
   ) async {
@@ -280,6 +352,24 @@ class FailingDriverGigService implements DriverGigService {
     required String driverId,
   }) async {
     throw StateError('database unavailable');
+  }
+}
+
+class FakeDriverRealtimeService implements DriverRealtimeService {
+  VoidCallback? _onChange;
+  int unsubscribeCalls = 0;
+
+  @override
+  VoidCallback subscribeToRelocationRequestChanges(VoidCallback onChange) {
+    _onChange = onChange;
+
+    return () {
+      unsubscribeCalls += 1;
+    };
+  }
+
+  void emitChange() {
+    _onChange?.call();
   }
 }
 

@@ -12,6 +12,8 @@ vi.mock("@supabase/supabase-js", () => ({
 
 class FakeSupabaseClient {
   readonly inserts: unknown[] = [];
+  private realtimeCallback: (() => void) | undefined;
+  private unsubscribeCalls = 0;
 
   readonly auth = {
     getSession: async () => ({ data: { session: null }, error: null }),
@@ -40,6 +42,33 @@ class FakeSupabaseClient {
         order: async () => ({ data: [], error: null })
       })
     };
+  }
+
+  channel() {
+    const realtimeChannel = {
+      on: (
+        _type: string,
+        _filter: unknown,
+        callback: () => void
+      ) => {
+        this.realtimeCallback = callback;
+        return realtimeChannel;
+      },
+      subscribe: () => realtimeChannel,
+      unsubscribe: () => {
+        this.unsubscribeCalls += 1;
+      }
+    };
+
+    return realtimeChannel;
+  }
+
+  emitRelocationChange() {
+    this.realtimeCallback?.();
+  }
+
+  realtimeUnsubscribeCount() {
+    return this.unsubscribeCalls;
   }
 }
 
@@ -110,5 +139,21 @@ describe("dispatcher runtime", () => {
         }
       }
     ]);
+  });
+
+  it("wires relocation realtime changes to Supabase and unsubscribes cleanly", () => {
+    const supabase = new FakeSupabaseClient();
+    const runtime = createDispatcherRuntime(supabase);
+    let changeCount = 0;
+
+    const unsubscribe =
+      runtime.realtimeService!.subscribeToRelocationRequestChanges(() => {
+        changeCount += 1;
+      });
+    supabase.emitRelocationChange();
+    unsubscribe();
+
+    expect(changeCount).toBe(1);
+    expect(supabase.realtimeUnsubscribeCount()).toBe(1);
   });
 });

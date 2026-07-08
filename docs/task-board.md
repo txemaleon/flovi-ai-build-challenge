@@ -109,7 +109,18 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 8
 
+## Slice 9 - Realtime Refresh For Relocation Lists
+
+- [x] Confirm Slice 9 scope: dispatcher and driver realtime refresh only
+- [x] RED/GREEN: add dispatcher realtime boundary and dashboard refresh
+- [x] RED/GREEN: clean up dispatcher realtime subscription on unmount
+- [x] Wire dispatcher Supabase realtime subscription for `public.relocation_requests`
+- [x] RED/GREEN: add driver realtime boundary and list refresh
+- [x] RED/GREEN: clean up driver realtime subscription on dispose/sign-out
+- [x] Wire driver Supabase realtime subscription for `public.relocation_requests`
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 9
+
 ## Later Slices
 
-- [ ] Supabase realtime integration
 - [ ] Deployment and public demo URLs

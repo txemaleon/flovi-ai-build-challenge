@@ -18,6 +18,33 @@ function createService(
   };
 }
 
+function createRealtimeService(): {
+  realtimeService: {
+    subscribeToRelocationRequestChanges(callback: () => void): () => void;
+  };
+  emitChange: () => void;
+  unsubscribeCount: () => number;
+} {
+  let onChange: (() => void) | undefined;
+  let unsubscribeCalls = 0;
+
+  return {
+    emitChange: () => {
+      onChange?.();
+    },
+    unsubscribeCount: () => unsubscribeCalls,
+    realtimeService: {
+      subscribeToRelocationRequestChanges: (callback) => {
+        onChange = callback;
+
+        return () => {
+          unsubscribeCalls += 1;
+        };
+      }
+    }
+  };
+}
+
 describe("RelocationDashboard", () => {
   it("shows existing relocation requests with route, scheduled time, and status", async () => {
     const wrapper = mount(RelocationDashboard, {
@@ -351,5 +378,43 @@ describe("RelocationDashboard", () => {
     await wrapper.find('[data-test="request-form"]').trigger("submit");
 
     expect(wrapper.text()).toContain("Unable to save relocation request.");
+  });
+
+  it("refreshes requests after realtime changes and cleans up the subscription", async () => {
+    const requests: RelocationRequest[] = [
+      {
+        id: "request-1",
+        dispatcherId: "dispatcher-1",
+        origin: "Madrid Airport",
+        destination: "Barcelona Sants",
+        scheduledAt: "2026-07-09T09:30:00.000Z",
+        notes: "Vehicle is parked in short stay.",
+        status: "available"
+      }
+    ];
+    const realtime = createRealtimeService();
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService(requests),
+        realtimeService: realtime.realtimeService
+      }
+    });
+
+    await vi.dynamicImportSettled();
+    requests.splice(0, requests.length, {
+      id: "request-2",
+      dispatcherId: "dispatcher-1",
+      origin: "Valencia Port",
+      destination: "Madrid Chamartin",
+      scheduledAt: "2026-07-10T15:00:00.000Z",
+      notes: "Updated by realtime.",
+      status: "available"
+    });
+    realtime.emitChange();
+    await vi.dynamicImportSettled();
+
+    expect(wrapper.text()).toContain("Valencia Port");
+    wrapper.unmount();
+    expect(realtime.unsubscribeCount()).toBe(1);
   });
 });

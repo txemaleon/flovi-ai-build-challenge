@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,6 +29,9 @@ Future<void> main() async {
         createGigService: (_) => config.hasSupabaseConfig
             ? SupabaseDriverGigService(Supabase.instance.client)
             : InMemoryDriverGigService(seedDriverGigs()),
+        createRealtimeService: (_) => config.hasSupabaseConfig
+            ? SupabaseDriverRealtimeService(Supabase.instance.client)
+            : null,
       ),
     ),
   );
@@ -130,7 +135,15 @@ abstract interface class DriverGigService {
   });
 }
 
+abstract interface class DriverRealtimeService {
+  VoidCallback subscribeToRelocationRequestChanges(VoidCallback onChange);
+}
+
 typedef DriverGigServiceFactory = DriverGigService Function(
+  DriverSession session,
+);
+
+typedef DriverRealtimeServiceFactory = DriverRealtimeService? Function(
   DriverSession session,
 );
 
@@ -138,11 +151,13 @@ class DriverShell extends StatefulWidget {
   const DriverShell({
     required this.authService,
     required this.createGigService,
+    this.createRealtimeService,
     super.key,
   });
 
   final DriverAuthService authService;
   final DriverGigServiceFactory createGigService;
+  final DriverRealtimeServiceFactory? createRealtimeService;
 
   @override
   State<DriverShell> createState() => _DriverShellState();
@@ -233,6 +248,7 @@ class _DriverShellState extends State<DriverShell> {
           children: [
             DriverApp(
               driverId: session.userId,
+              realtimeService: widget.createRealtimeService?.call(session),
               service: widget.createGigService(session),
             ),
             Positioned(
@@ -421,11 +437,40 @@ class SupabaseDriverGigService implements DriverGigService {
   }
 }
 
+class SupabaseDriverRealtimeService implements DriverRealtimeService {
+  SupabaseDriverRealtimeService(this._client);
+
+  final SupabaseClient _client;
+
+  @override
+  VoidCallback subscribeToRelocationRequestChanges(VoidCallback onChange) {
+    final channel = _client
+        .channel('driver-relocation-requests')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'relocation_requests',
+          callback: (_) => onChange(),
+        )
+        .subscribe();
+
+    return () {
+      unawaited(channel.unsubscribe());
+    };
+  }
+}
+
 class DriverApp extends StatefulWidget {
-  const DriverApp({required this.driverId, required this.service, super.key});
+  const DriverApp({
+    required this.driverId,
+    required this.service,
+    this.realtimeService,
+    super.key,
+  });
 
   final String driverId;
   final DriverGigService service;
+  final DriverRealtimeService? realtimeService;
 
   @override
   State<DriverApp> createState() => _DriverAppState();
@@ -433,11 +478,14 @@ class DriverApp extends StatefulWidget {
 
 class _DriverAppState extends State<DriverApp> {
   late Future<DriverGigLists> _gigLists;
+  VoidCallback? _unsubscribeFromRealtime;
 
   @override
   void initState() {
     super.initState();
     _gigLists = _loadGigs();
+    _unsubscribeFromRealtime =
+        widget.realtimeService?.subscribeToRelocationRequestChanges(_refresh);
   }
 
   Future<DriverGigLists> _loadGigs() async {
@@ -449,9 +497,23 @@ class _DriverAppState extends State<DriverApp> {
 
   Future<void> _bookGig(DriverGig gig) async {
     await widget.service.bookGig(requestId: gig.id, driverId: widget.driverId);
+    _refresh();
+  }
+
+  void _refresh() {
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _gigLists = _loadGigs();
     });
+  }
+
+  @override
+  void dispose() {
+    _unsubscribeFromRealtime?.call();
+    super.dispose();
   }
 
   @override
