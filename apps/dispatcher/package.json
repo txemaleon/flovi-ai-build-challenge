@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@flovi/core": "file:../../packages/core",
+    "@supabase/supabase-js": "^2.110.1",
     "vue": "^3.5.26"
-  },
-  "devDependencies": {}
+  }
 }

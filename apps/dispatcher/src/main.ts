@@ -1,26 +1,24 @@
 import { createApp } from "vue";
-import {
-  InMemoryRelocationRequestRepository,
-  createAvailableRelocationRequest
-} from "@flovi/core";
-import RelocationDashboard from "./RelocationDashboard.vue";
-import { createDispatcherRelocationService } from "./services/createDispatcherRelocationService.js";
+import DispatcherApp from "./DispatcherApp.vue";
+import { createDispatcherRuntime } from "./runtime/createDispatcherRuntime.js";
+import { createSupabaseBrowserClient } from "./runtime/createSupabaseBrowserClient.js";
+import { readDispatcherConfig } from "./runtime/readDispatcherConfig.js";
 
-const relocationRequests = new InMemoryRelocationRequestRepository();
+const config = readDispatcherConfig({
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY
+});
+const runtime =
+  config.supabaseUrl && config.supabaseAnonKey
+    ? createDispatcherRuntime(
+        createSupabaseBrowserClient({
+          supabaseUrl: config.supabaseUrl,
+          supabaseAnonKey: config.supabaseAnonKey
+        })
+      )
+    : undefined;
 
-await relocationRequests.save(
-  createAvailableRelocationRequest("demo-request-1", {
-    dispatcherId: "demo-dispatcher",
-    origin: "Madrid Airport",
-    destination: "Barcelona Sants",
-    scheduledAt: "2026-07-09T09:30:00.000Z",
-    notes: "Demo request loaded from the local app composition root."
-  })
-);
-
-createApp(RelocationDashboard, {
-  service: createDispatcherRelocationService({
-    dispatcherId: "demo-dispatcher",
-    relocationRequests
-  })
+createApp(DispatcherApp, {
+  config,
+  runtime
 }).mount("#app");

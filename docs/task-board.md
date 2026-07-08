@@ -37,12 +37,27 @@
 - [x] Run tests, coverage, typecheck, and dispatcher build
 - [x] Commit Slice 3
 
+## Slice 4 - Dispatcher Supabase Auth And Persistence
+
+- [x] Confirm Slice 4 scope: dispatcher app plus minimal core changes only
+- [x] RED/GREEN: add dispatcher auth service tests and implementation
+- [x] RED/GREEN: add dispatcher shell configuration state
+- [x] RED/GREEN: show unauthenticated Google sign-in action
+- [x] RED/GREEN: wire authenticated shell to Supabase relocation repository
+- [x] RED/GREEN: expose authenticated sign-out action
+- [x] Move Google sign-in responsibility out of relocation dashboard
+- [x] Add Supabase browser client composition
+- [x] Add authenticated Data API grant migration
+- [x] Update `.env.example` if needed
+- [x] Run tests, coverage, typecheck, and dispatcher build
+- [x] Commit Slice 4
+
 ## Later Slices
 
 - [ ] Dispatcher edits and updates relocation requests
 - [ ] Driver browses available unbooked gigs
 - [ ] Driver books a gig with one-tap confirmation
 - [ ] Driver views booked gigs
-- [ ] Supabase auth and realtime integration
+- [ ] Supabase realtime integration
 - [ ] Driver Flutter app workflow
 - [ ] Deployment and public demo URLs

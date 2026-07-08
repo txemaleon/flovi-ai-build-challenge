@@ -74,12 +74,9 @@ onMounted(loadRequests);
           <p class="eyebrow">Dispatcher</p>
           <h1>Relocation requests</h1>
         </div>
-        <div class="header-actions">
-          <button class="google-button" type="button">Sign in with Google</button>
-          <button data-test="refresh" class="secondary-button" @click="loadRequests">
-            Refresh
-          </button>
-        </div>
+        <button data-test="refresh" class="secondary-button" @click="loadRequests">
+          Refresh
+        </button>
       </div>
 
       <form
@@ -185,12 +182,6 @@ onMounted(loadRequests);
   gap: 16px;
 }
 
-.header-actions {
-  align-items: center;
-  display: flex;
-  gap: 10px;
-}
-
 .eyebrow {
   margin: 0 0 6px;
   color: #607089;
@@ -208,7 +199,6 @@ h1 {
   text-wrap: balance;
 }
 
-.google-button,
 .primary-button,
 .secondary-button {
   min-height: 40px;
@@ -222,12 +212,6 @@ h1 {
   transition-duration: 160ms;
 }
 
-.google-button {
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.14);
-  color: #24344d;
-}
-
 .primary-button {
   align-self: end;
   background: #2563eb;
@@ -239,10 +223,6 @@ h1 {
   color: #24344d;
 }
 
-.google-button:hover {
-  background: #f8fafc;
-}
-
 .primary-button:hover {
   background: #1d4ed8;
 }
@@ -251,7 +231,6 @@ h1 {
   background: #dfe7f2;
 }
 
-.google-button:active,
 .primary-button:active,
 .secondary-button:active {
   transform: scale(0.96);
@@ -366,8 +345,7 @@ textarea {
     padding: 16px;
   }
 
-  .panel-header,
-  .header-actions {
+  .panel-header {
     align-items: stretch;
     flex-direction: column;
   }
