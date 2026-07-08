@@ -1,0 +1,18 @@
+{
+  "name": "@flovi/dispatcher",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vue-tsc -p tsconfig.json --noEmit && vite build",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "typecheck": "vue-tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@flovi/core": "file:../../packages/core",
+    "vue": "^3.5.26"
+  },
+  "devDependencies": {}
+}

@@ -24,6 +24,19 @@
 - [x] Run tests, coverage, and typecheck
 - [x] Commit Slice 2
 
+## Slice 3 - Dispatcher Vue Dashboard Create And List
+
+- [x] Confirm Slice 3 scope: dispatcher app only, no driver app
+- [x] Add Vue 3 + Vite dispatcher app skeleton
+- [x] RED/GREEN: show existing relocation requests
+- [x] RED/GREEN: show loading, empty, and error states
+- [x] RED/GREEN: create a relocation request and refresh the visible list
+- [x] Keep UI behind an app-level relocation service/composition layer
+- [x] Add restrained product-like dashboard styling
+- [x] Wire monorepo root scripts for dispatcher build/dev
+- [x] Run tests, coverage, typecheck, and dispatcher build
+- [x] Commit Slice 3
+
 ## Later Slices
 
 - [ ] Dispatcher edits and updates relocation requests
@@ -31,6 +44,5 @@
 - [ ] Driver books a gig with one-tap confirmation
 - [ ] Driver views booked gigs
 - [ ] Supabase auth and realtime integration
-- [ ] Dispatcher Vue app workflow
 - [ ] Driver Flutter app workflow
 - [ ] Deployment and public demo URLs
