@@ -177,3 +177,32 @@ Delivery:
 - Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(115/115)`, 100% branches `(86/86)`, 100% functions `(37/37)`, 100% lines `(113/113)`. Core coverage: 100% statements `(40/40)`, 100% branches `(18/18)`, 100% functions `(15/15)`, 100% lines `(40/40)`.
 - Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
 - Verification: `npm run dispatcher:build` passed; Vite built `dist/index.html`, `dist/assets/index-6o2Ws50y.css`, and `dist/assets/index-DJnw6MLz.js` successfully.
+
+## 2026-07-08 - Slice 6
+
+Prompt: implement only "a driver can open the driver app and see available relocation gigs sorted by scheduled time."
+
+Constraints:
+
+- Scope is core relocation context and the driver app.
+- Treat `available` as the current unbooked state; do not add booking, driver ownership, status transitions, or Google OAuth.
+- Use fake/in-memory data for the driver UI to avoid expanding Supabase scope.
+- Work RED/GREEN one behavior at a time.
+- Keep tests network-free except Docker image/package retrieval needed to run Flutter tooling.
+- Keep existing TypeScript coverage at 100%.
+- Use Docker for Flutter verification because `flutter` is not available on PATH in this environment.
+
+Delivery:
+
+- Added `listDriverAvailableRelocationGigs` to the core relocation application boundary.
+- Kept the existing domain status model unchanged and treated `available` as the unbooked state.
+- Verified the driver query returns available gigs sorted by `scheduledAt` ascending.
+- Added a minimal Flutter web driver app under `apps/driver` with `DriverGig`, `DriverGigService`, and `InMemoryDriverGigService`.
+- Added a driver UI that renders available gigs through the app-level service boundary with fake in-memory data.
+- Added Flutter model/widget tests for the in-memory service and the rendered gig ordering.
+- Added root scripts for repeatable Docker verification: `npm run driver:test` and `npm run driver:build`.
+- Verification: `npm test` passed with dispatcher 5 test files / 34 tests and core 2 test files / 15 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(115/115)`, 100% branches `(86/86)`, 100% functions `(37/37)`, 100% lines `(113/113)`. Core coverage: 100% statements `(44/44)`, 100% branches `(18/18)`, 100% functions `(18/18)`, 100% lines `(44/44)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 2 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.

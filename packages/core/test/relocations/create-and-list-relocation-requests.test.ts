@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   InMemoryRelocationRequestRepository,
   createRelocationRequest,
+  listDriverAvailableRelocationGigs,
   listRelocationRequests,
   updateRelocationRequest
 } from "../../src/relocations/index.js";
@@ -185,5 +186,57 @@ describe("dispatcher relocation request workflow", () => {
         { relocationRequests }
       )
     ).rejects.toThrow("Failed to update relocation request: unknown error");
+  });
+
+  it("lists driver-available gigs sorted by scheduled time", async () => {
+    const relocationRequests = {
+      save: async () => undefined,
+      update: async () => {
+        throw new Error("update is not used in this test");
+      },
+      list: async () => [
+        {
+          id: "request-later",
+          dispatcherId: "dispatcher-1",
+          origin: "Barcelona Sants",
+          destination: "Valencia Port",
+          scheduledAt: "2026-07-12T15:00:00.000Z",
+          notes: "Later request",
+          status: "available" as const
+        },
+        {
+          id: "request-earlier",
+          dispatcherId: "dispatcher-1",
+          origin: "Madrid Chamartin",
+          destination: "Seville Station",
+          scheduledAt: "2026-07-10T09:30:00.000Z",
+          notes: "Earlier request",
+          status: "available" as const
+        }
+      ]
+    };
+
+    await expect(
+      listDriverAvailableRelocationGigs({ relocationRequests })
+    ).resolves.toEqual([
+      {
+        id: "request-earlier",
+        dispatcherId: "dispatcher-1",
+        origin: "Madrid Chamartin",
+        destination: "Seville Station",
+        scheduledAt: "2026-07-10T09:30:00.000Z",
+        notes: "Earlier request",
+        status: "available"
+      },
+      {
+        id: "request-later",
+        dispatcherId: "dispatcher-1",
+        origin: "Barcelona Sants",
+        destination: "Valencia Port",
+        scheduledAt: "2026-07-12T15:00:00.000Z",
+        notes: "Later request",
+        status: "available"
+      }
+    ]);
   });
 });

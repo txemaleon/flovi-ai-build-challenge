@@ -69,11 +69,21 @@
 - [x] Run tests, coverage, typecheck, and dispatcher build
 - [x] Commit Slice 5
 
+## Slice 6 - Driver Browses Available Gigs
+
+- [x] Confirm Slice 6 scope: core relocation query and driver Flutter app only
+- [x] RED: add core application-boundary test for driver-available gigs
+- [x] GREEN: list available relocation gigs sorted by scheduled time
+- [x] RED: add Flutter driver service/widget tests
+- [x] GREEN: add minimal Flutter web driver app with app-level service boundary
+- [x] Add Docker-backed driver test/build scripts
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 6
+
 ## Later Slices
 
-- [ ] Driver browses available unbooked gigs
 - [ ] Driver books a gig with one-tap confirmation
 - [ ] Driver views booked gigs
 - [ ] Supabase realtime integration
-- [ ] Driver Flutter app workflow
+- [ ] Wire driver Flutter app to real Supabase data
 - [ ] Deployment and public demo URLs

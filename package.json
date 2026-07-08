@@ -12,7 +12,9 @@
     "coverage": "npm run coverage --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "dispatcher:dev": "npm run dev -w @flovi/dispatcher",
-    "dispatcher:build": "npm run build -w @flovi/dispatcher"
+    "dispatcher:build": "npm run build -w @flovi/dispatcher",
+    "driver:test": "docker run --rm -v \"$PWD/apps/driver:/workspace\" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'",
+    "driver:build": "docker run --rm -v \"$PWD/apps/driver:/workspace\" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.3",
