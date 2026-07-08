@@ -23,18 +23,19 @@ class FakeSupabaseClient {
   };
 
   from(table: string) {
+    const updateFilter = {
+      eq: () => updateFilter,
+      select: () => ({
+        single: async () => ({ data: null, error: null })
+      })
+    };
+
     return {
       insert: async (row: unknown) => {
         this.inserts.push({ table, row });
         return { error: null };
       },
-      update: () => ({
-        eq: () => ({
-          select: () => ({
-            single: async () => ({ data: null, error: null })
-          })
-        })
-      }),
+      update: () => updateFilter,
       select: () => ({
         order: async () => ({ data: [], error: null })
       })
@@ -104,7 +105,8 @@ describe("dispatcher runtime", () => {
           destination: "Barcelona Sants",
           scheduled_at: "2026-07-09T09:30:00.000Z",
           notes: "Authenticated request",
-          status: "available"
+          status: "available",
+          driver_id: null
         }
       }
     ]);

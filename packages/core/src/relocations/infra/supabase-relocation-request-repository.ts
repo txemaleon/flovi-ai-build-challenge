@@ -1,6 +1,9 @@
 import type { RelocationRequestRepository } from "../application/ports/relocation-request-repository.js";
 import type { UpdateRelocationRequestFields } from "../application/update-relocation-request.js";
-import type { RelocationRequest } from "../domain/relocation-request.js";
+import type {
+  RelocationRequest,
+  RelocationRequestStatus
+} from "../domain/relocation-request.js";
 
 type SupabaseError = Readonly<{
   message: string;
@@ -18,16 +21,7 @@ type SupabaseQueryResult<Row> = Readonly<{
 export type SupabaseRelocationRequestClient = Readonly<{
   from(table: "relocation_requests"): {
     insert(row: RelocationRequestRow): PromiseLike<SupabaseMutationResult>;
-    update(row: RelocationRequestUpdateRow): {
-      eq(column: "id", value: string): {
-        select(columns?: string): {
-          single(): PromiseLike<{
-            data: RelocationRequestRow | null;
-            error: SupabaseError | null;
-          }>;
-        };
-      };
-    };
+    update(row: RelocationRequestUpdateRow): SupabaseRelocationRequestUpdate;
     select(columns: string): {
       order(
         column: "scheduled_at",
@@ -37,6 +31,19 @@ export type SupabaseRelocationRequestClient = Readonly<{
   };
 }>;
 
+type SupabaseRelocationRequestUpdate = {
+  eq(
+    column: "id" | "status",
+    value: string
+  ): SupabaseRelocationRequestUpdate;
+  select(columns?: string): {
+    single(): PromiseLike<{
+      data: RelocationRequestRow | null;
+      error: SupabaseError | null;
+    }>;
+  };
+};
+
 type RelocationRequestRow = Readonly<{
   id: string;
   dispatcher_id: string;
@@ -44,19 +51,25 @@ type RelocationRequestRow = Readonly<{
   destination: string;
   scheduled_at: string;
   notes: string;
-  status: "available";
+  status: RelocationRequestStatus;
+  driver_id: string | null;
 }>;
 
-type RelocationRequestUpdateRow = Readonly<{
-  origin: string;
-  destination: string;
-  scheduled_at: string;
-  notes: string;
-  status: "available";
-}>;
+type RelocationRequestUpdateRow =
+  | Readonly<{
+      origin: string;
+      destination: string;
+      scheduled_at: string;
+      notes: string;
+      status: RelocationRequestStatus;
+    }>
+  | Readonly<{
+      status: "booked";
+      driver_id: string;
+    }>;
 
 const relocationRequestColumns =
-  "id,dispatcher_id,origin,destination,scheduled_at,notes,status";
+  "id,dispatcher_id,origin,destination,scheduled_at,notes,status,driver_id";
 
 export class SupabaseRelocationRequestRepository
   implements RelocationRequestRepository
@@ -106,6 +119,28 @@ export class SupabaseRelocationRequestRepository
 
     return toRelocationRequest(result.data!);
   }
+
+  async bookAvailable(
+    requestId: string,
+    driverId: string
+  ): Promise<RelocationRequest> {
+    const result = await this.supabase
+      .from("relocation_requests")
+      .update({
+        status: "booked",
+        driver_id: driverId
+      })
+      .eq("id", requestId)
+      .eq("status", "available")
+      .select(relocationRequestColumns)
+      .single();
+
+    if (result.error || !result.data) {
+      throw new Error("Relocation request is not available.");
+    }
+
+    return toRelocationRequest(result.data);
+  }
 }
 
 function toRelocationRequestRow(
@@ -118,7 +153,8 @@ function toRelocationRequestRow(
     destination: request.destination,
     scheduled_at: request.scheduledAt,
     notes: request.notes,
-    status: request.status
+    status: request.status,
+    driver_id: request.driverId ?? null
   };
 }
 
@@ -130,7 +166,8 @@ function toRelocationRequest(row: RelocationRequestRow): RelocationRequest {
     destination: row.destination,
     scheduledAt: row.scheduled_at,
     notes: row.notes,
-    status: row.status
+    status: row.status,
+    ...(row.driver_id ? { driverId: row.driver_id } : {})
   };
 }
 
@@ -142,6 +179,6 @@ function toRelocationRequestUpdateRow(
     destination: request.destination,
     scheduled_at: request.scheduledAt,
     notes: request.notes,
-    status: request.status ?? "available"
+    status: request.status === "booked" ? "booked" : "available"
   };
 }

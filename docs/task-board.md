@@ -80,10 +80,22 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 6
 
+## Slice 7 - Driver Books One Available Gig
+
+- [x] Confirm Slice 7 scope: core booking and driver Flutter app only
+- [x] RED/GREEN: add `booked` status and driver ownership to the core model
+- [x] RED/GREEN: book an available gig through the core application boundary
+- [x] RED/GREEN: fail clearly when booking a missing gig
+- [x] RED/GREEN: fail clearly when booking an already-booked gig
+- [x] RED/GREEN: list booked gigs for a driver
+- [x] RED/GREEN: implement atomic booking at the repository port boundary
+- [x] RED/GREEN: extend Supabase adapter and migrations for booking
+- [x] RED/GREEN: add Flutter available/booked sections and one-tap booking
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 7
+
 ## Later Slices
 
-- [ ] Driver books a gig with one-tap confirmation
-- [ ] Driver views booked gigs
 - [ ] Supabase realtime integration
 - [ ] Wire driver Flutter app to real Supabase data
 - [ ] Deployment and public demo URLs

@@ -5,4 +5,5 @@ export interface RelocationRequestRepository {
   save(request: RelocationRequest): Promise<void>;
   list(): Promise<RelocationRequest[]>;
   update(request: UpdateRelocationRequestFields): Promise<RelocationRequest>;
+  bookAvailable(requestId: string, driverId: string): Promise<RelocationRequest>;
 }

@@ -1,5 +1,7 @@
+export * from "./application/book-relocation-gig.js";
 export * from "./application/create-relocation-request.js";
 export * from "./application/list-driver-available-relocation-gigs.js";
+export * from "./application/list-driver-booked-relocation-gigs.js";
 export * from "./application/list-relocation-requests.js";
 export * from "./application/update-relocation-request.js";
 export * from "./application/ports/relocation-request-repository.js";

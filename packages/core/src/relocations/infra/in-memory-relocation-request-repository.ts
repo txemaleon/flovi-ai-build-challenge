@@ -36,4 +36,29 @@ export class InMemoryRelocationRequestRepository
 
     return updated;
   }
+
+  async bookAvailable(
+    requestId: string,
+    driverId: string
+  ): Promise<RelocationRequest> {
+    const existing = this.requests.get(requestId);
+
+    if (!existing) {
+      throw new Error("Relocation request not found.");
+    }
+
+    if (existing.status !== "available") {
+      throw new Error("Relocation request is not available.");
+    }
+
+    const booked: RelocationRequest = {
+      ...existing,
+      status: "booked",
+      driverId
+    };
+
+    this.requests.set(booked.id, booked);
+
+    return booked;
+  }
 }

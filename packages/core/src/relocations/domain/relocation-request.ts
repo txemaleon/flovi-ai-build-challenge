@@ -1,4 +1,4 @@
-export const relocationRequestStatuses = ["available"] as const;
+export const relocationRequestStatuses = ["available", "booked"] as const;
 
 export type RelocationRequestStatus =
   (typeof relocationRequestStatuses)[number];
@@ -11,6 +11,7 @@ export type RelocationRequest = Readonly<{
   scheduledAt: string;
   notes: string;
   status: RelocationRequestStatus;
+  driverId?: string;
 }>;
 
 export type CreateRelocationRequestFields = Readonly<{

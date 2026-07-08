@@ -206,3 +206,35 @@ Delivery:
 - Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 2 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
+## 2026-07-08 - Slice 7
+
+Prompt: implement only "a driver taps one available gig, confirms it, and then sees it in their booked list."
+
+Constraints:
+
+- Scope is core relocation context and the driver Flutter app.
+- Add real `booked` status and driver ownership in the smallest explicit model.
+- Booking uses public `requestId` and `driverId` inputs.
+- Booking succeeds only for currently `available` gigs.
+- Booking fails clearly when the gig is missing or already booked.
+- Keep booking atomic at the repository port boundary.
+- Keep the driver app on in-memory data; do not add Supabase UI wiring, Google OAuth, realtime, completed/cancelled statuses, or dispatcher UI changes.
+- Keep tests network-free except Docker image/package retrieval needed to run Flutter tooling.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added `booked` to the relocation status model and added optional `driverId` ownership to relocation requests.
+- Added `bookRelocationGig` as the public core booking use case and `listDriverBookedRelocationGigs` for booked-list display.
+- Extended `RelocationRequestRepository` with atomic `bookAvailable(requestId, driverId)`.
+- Updated the in-memory repository to book only currently available gigs and fail clearly for missing or unavailable requests.
+- Updated `SupabaseRelocationRequestRepository` to map `driver_id`, support `booked` rows, and atomically book with update filters for both `id` and `status = available`.
+- Added migrations `20260708192000_add_driver_booking_to_relocation_requests.sql` and `20260708192100_add_driver_booking_policy.sql` to add `booked`, nullable `driver_id`, and an authenticated driver booking policy. The policy is split into a later migration so the new enum value is committed before it is referenced.
+- Extended the Flutter driver service and UI with available/booked sections and a one-tap `Book` action that refreshes both lists.
+- Added Flutter model/widget tests for booking and booked-list behavior.
+- Verification: `npm test` passed with dispatcher 5 test files / 34 tests and core 2 test files / 22 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(115/115)`, 100% branches `(86/86)`, 100% functions `(37/37)`, 100% lines `(113/113)`. Core coverage: 100% statements `(60/60)`, 100% branches `(32/32)`, 100% functions `(24/24)`, 100% lines `(60/60)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 4 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
