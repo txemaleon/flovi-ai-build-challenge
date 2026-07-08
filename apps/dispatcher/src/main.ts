@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import DispatcherApp from "./DispatcherApp.vue";
 import { createDispatcherRuntime } from "./runtime/createDispatcherRuntime.js";
+import { createLocalDispatcherRuntime } from "./runtime/createLocalDispatcherRuntime.js";
 import { createSupabaseBrowserClient } from "./runtime/createSupabaseBrowserClient.js";
 import { readDispatcherConfig } from "./runtime/readDispatcherConfig.js";
 
@@ -16,7 +17,7 @@ const runtime =
           supabaseAnonKey: config.supabaseAnonKey
         })
       )
-    : undefined;
+    : createLocalDispatcherRuntime();
 
 createApp(DispatcherApp, {
   config,

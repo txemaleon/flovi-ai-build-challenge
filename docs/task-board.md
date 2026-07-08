@@ -153,6 +153,16 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 12
 
+## Slice 13 - Demo Data And Operational Filtering
+
+- [x] Confirm Slice 13 scope: demo data, local fallback filtering, and seed docs only
+- [x] RED/GREEN: add reusable Spain demo dataset and core filtering helpers
+- [x] RED/GREEN: add dispatcher search, autocomplete, date, status, and assignment filtering UI
+- [x] RED/GREEN: add driver place/date filters, pickup-time sort, and suggested-next section
+- [x] Add Supabase demo seed script using env vars only
+- [x] Run npm tests, coverage, typecheck, and Docker driver verification
+- [x] Commit Slice 13
+
 ## Later Slices
 
 - [ ] Deployment and public demo URLs

@@ -35,6 +35,10 @@ const authError = ref("");
 let unsubscribeFromAuth: (() => void) | undefined;
 
 const configurationMessage = computed(() => {
+  if (props.runtime) {
+    return "";
+  }
+
   const missingVariables = [
     props.config.supabaseUrl ? "" : "VITE_SUPABASE_URL",
     props.config.supabaseAnonKey ? "" : "VITE_SUPABASE_ANON_KEY"
@@ -49,6 +53,12 @@ const configurationMessage = computed(() => {
 
 onMounted(async () => {
   if (configurationMessage.value) {
+    isCheckingSession.value = false;
+    return;
+  }
+
+  if (!props.runtime) {
+    authError.value = "Unable to read auth session.";
     isCheckingSession.value = false;
     return;
   }

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DispatcherSession } from "../src/auth/createDispatcherAuthService.js";
 import { createDispatcherRuntime } from "../src/runtime/createDispatcherRuntime.js";
+import { createLocalDispatcherRuntime } from "../src/runtime/createLocalDispatcherRuntime.js";
 import { createSupabaseBrowserClient } from "../src/runtime/createSupabaseBrowserClient.js";
 import { readDispatcherConfig } from "../src/runtime/readDispatcherConfig.js";
 
@@ -156,5 +157,27 @@ describe("dispatcher runtime", () => {
 
     expect(changeCount).toBe(1);
     expect(supabase.realtimeUnsubscribeCount()).toBe(1);
+  });
+
+  it("provides a local demo runtime with seeded relocation data", async () => {
+    const runtime = createLocalDispatcherRuntime();
+    const session = await runtime.authService.getCurrentSession();
+
+    expect(session?.user.email).toBe("demo-dispatcher@flovi.local");
+
+    const service = runtime.createRelocationService(session!);
+    await expect(service.listRelocationRequests()).resolves.toHaveLength(28);
+
+    await runtime.authService.signOut();
+    await expect(runtime.authService.getCurrentSession()).resolves.toBeNull();
+
+    await runtime.authService.signInWithGoogle();
+    await expect(runtime.authService.getCurrentSession()).resolves.toEqual({
+      user: {
+        id: "demo-dispatcher",
+        email: "demo-dispatcher@flovi.local"
+      }
+    });
+    expect(runtime.authService.subscribeToAuthChanges(() => undefined)()).toBeUndefined();
   });
 });

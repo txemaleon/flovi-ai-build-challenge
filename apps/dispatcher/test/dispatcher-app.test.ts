@@ -88,14 +88,9 @@ function createAuthService(
 
 describe("DispatcherApp", () => {
   it("shows a clear configuration state when Supabase env is missing", async () => {
-    const auth = createAuthService(null);
     const wrapper = mount(DispatcherApp, {
       props: {
-        config: {},
-        runtime: {
-          authService: auth.authService,
-          createRelocationService: () => createRelocationService([])
-        }
+        config: {}
       }
     });
 
@@ -126,6 +121,21 @@ describe("DispatcherApp", () => {
 
     expect(wrapper.text()).toContain("Sign in with Google");
     expect(auth.signInCount()).toBe(1);
+  });
+
+  it("shows a fallback session error when config exists without a runtime", async () => {
+    const wrapper = mount(DispatcherApp, {
+      props: {
+        config: {
+          supabaseUrl: "https://example.supabase.co",
+          supabaseAnonKey: "public-anon-key"
+        }
+      }
+    });
+
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Unable to read auth session.");
   });
 
   it("wires authenticated users to the relocation dashboard with their session user id", async () => {

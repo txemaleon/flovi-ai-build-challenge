@@ -53,6 +53,19 @@ supabase db reset
 
 The migration `20260708203000_enable_relocation_requests_realtime.sql` enables realtime delivery for `public.relocation_requests` by setting `replica identity full` and adding the table to the `supabase_realtime` publication only when it is not already present.
 
+To load the public demo dataset into a real Supabase project, first create or choose dispatcher and driver auth users in Supabase, then run the seed script with environment variables. The script reads the shared demo dataset from `packages/core`, generates deterministic request UUIDs, and never stores personal user IDs in source:
+
+```sh
+SUPABASE_URL=https://<supabase-project-ref>.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
+DEMO_DISPATCHER_USER_ID=<dispatcher-auth-user-id> \
+DEMO_DRIVER_USER_ID=<primary-driver-auth-user-id> \
+DEMO_SECONDARY_DRIVER_USER_ID=<optional-second-driver-auth-user-id> \
+npm run seed:demo
+```
+
+Use the service role key only from a trusted local or CI environment. Do not expose it to browser or Flutter runtime configuration.
+
 ## Google OAuth
 
 Configure Google OAuth in the Supabase dashboard under Authentication > Providers > Google. Store the Google client secret only there.

@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import type { RelocationRequest, RelocationRequestStatus } from "@flovi/core";
+import {
+  filterRelocationRequests,
+  getRelocationPlaceOptions,
+  type RelocationRequest,
+  type RelocationRequestStatus
+} from "@flovi/core";
 import type { DispatcherRelocationService } from "./services/dispatcherRelocationService.js";
 import type { DispatcherRealtimeService } from "./services/dispatcherRealtimeService.js";
 
@@ -18,6 +23,11 @@ const scheduledAt = ref("");
 const notes = ref("");
 const editingRequestId = ref<string | null>(null);
 const activeStatusFilter = ref<"all" | RelocationRequestStatus>("all");
+const searchText = ref("");
+const filterOrigin = ref("");
+const filterDestination = ref("");
+const filterFrom = ref("");
+const filterTo = ref("");
 let unsubscribeFromRealtime: (() => void) | undefined;
 
 const statusFilters: Array<{
@@ -42,12 +52,17 @@ const statusCounts = computed(() =>
   }))
 );
 
+const placeOptions = computed(() => getRelocationPlaceOptions(requests.value));
+
 const filteredRequests = computed(() =>
-  activeStatusFilter.value === "all"
-    ? requests.value
-    : requests.value.filter(
-        (request) => request.status === activeStatusFilter.value
-      )
+  filterRelocationRequests(requests.value, {
+    searchText: searchText.value,
+    origin: filterOrigin.value,
+    destination: filterDestination.value,
+    status: activeStatusFilter.value,
+    scheduledFrom: toFilterStart(filterFrom.value),
+    scheduledTo: toFilterEnd(filterTo.value)
+  })
 );
 
 async function loadRequests() {
@@ -55,7 +70,7 @@ async function loadRequests() {
   errorMessage.value = "";
 
   try {
-    requests.value = await props.service.listRelocationRequests();
+    requests.value = [...(await props.service.listRelocationRequests())];
   } catch (error) {
     errorMessage.value =
       error instanceof Error
@@ -117,6 +132,14 @@ function toDateTimeLocal(value: string): string {
   return value.slice(0, 16);
 }
 
+function toFilterStart(value: string): string | undefined {
+  return value ? `${value}T00:00:00.000Z` : undefined;
+}
+
+function toFilterEnd(value: string): string | undefined {
+  return value ? `${value}T23:59:59.999Z` : undefined;
+}
+
 function editRequest(request: RelocationRequest) {
   editingRequestId.value = request.id;
   origin.value = request.origin;
@@ -162,6 +185,10 @@ function canCancel(request: RelocationRequest): boolean {
   return request.status === "available" || request.status === "booked";
 }
 
+function assignmentLabel(request: RelocationRequest): string {
+  return request.driverId ? `Assigned ${request.driverId}` : "Unassigned";
+}
+
 onMounted(() => {
   void loadRequests();
   unsubscribeFromRealtime =
@@ -199,6 +226,7 @@ onUnmounted(() => {
             v-model="origin"
             data-test="origin"
             autocomplete="off"
+            list="relocation-place-options"
             required
             type="text"
           />
@@ -209,6 +237,7 @@ onUnmounted(() => {
             v-model="destination"
             data-test="destination"
             autocomplete="off"
+            list="relocation-place-options"
             required
             type="text"
           />
@@ -246,6 +275,14 @@ onUnmounted(() => {
       </p>
 
       <template v-else>
+        <datalist id="relocation-place-options">
+          <option
+            v-for="place in placeOptions"
+            :key="place"
+            :value="place"
+          />
+        </datalist>
+
         <div v-if="requests.length > 0" class="status-tools">
           <button
             v-for="filter in statusCounts"
@@ -258,6 +295,46 @@ onUnmounted(() => {
           >
             <span data-test="status-summary">{{ filter.label }} {{ filter.count }}</span>
           </button>
+        </div>
+
+        <div v-if="requests.length > 0" class="filter-bar">
+          <label>
+            <span>Search</span>
+            <input
+              v-model="searchText"
+              data-test="request-search"
+              autocomplete="off"
+              type="search"
+            />
+          </label>
+          <label>
+            <span>Origin</span>
+            <input
+              v-model="filterOrigin"
+              data-test="filter-origin"
+              autocomplete="off"
+              list="relocation-place-options"
+              type="text"
+            />
+          </label>
+          <label>
+            <span>Destination</span>
+            <input
+              v-model="filterDestination"
+              data-test="filter-destination"
+              autocomplete="off"
+              list="relocation-place-options"
+              type="text"
+            />
+          </label>
+          <label>
+            <span>From</span>
+            <input v-model="filterFrom" data-test="filter-from" type="date" />
+          </label>
+          <label>
+            <span>To</span>
+            <input v-model="filterTo" data-test="filter-to" type="date" />
+          </label>
         </div>
 
         <p v-if="requests.length === 0" class="state-message">
@@ -280,6 +357,13 @@ onUnmounted(() => {
               </p>
               <p class="scheduled">
                 {{ formatScheduledAt(request.scheduledAt) }}
+              </p>
+              <p
+                v-if="request.status === 'booked' || request.status === 'completed'"
+                data-test="assignment"
+                class="assignment"
+              >
+                {{ assignmentLabel(request) }}
               </p>
             </div>
             <span data-test="status" class="status-pill">
@@ -459,6 +543,17 @@ textarea {
   margin-top: 20px;
 }
 
+.filter-bar {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr));
+  margin-top: 14px;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
 .filter-button {
   background: #eef2f7;
   border: 0;
@@ -512,6 +607,14 @@ textarea {
   margin: 6px 0 0;
 }
 
+.assignment {
+  color: #4d5c72;
+  font-size: 0.86rem;
+  font-weight: 700;
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
 .status-pill {
   background: #dff5ea;
   border-radius: 999px;
@@ -533,6 +636,10 @@ textarea {
   }
 
   .request-form {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
     grid-template-columns: 1fr;
   }
 

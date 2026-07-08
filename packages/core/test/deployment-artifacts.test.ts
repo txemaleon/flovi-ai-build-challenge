@@ -54,4 +54,20 @@ describe("deployment artifacts", () => {
     expect(migration).toContain("new.status = 'completed'");
     expect(migration).toContain("raise exception 'Invalid relocation request lifecycle update.'");
   });
+
+  it("documents a Supabase demo seed script that uses env vars and the shared dataset", () => {
+    const script = readRepoFile("scripts/seed-supabase-demo-data.mjs");
+    const guide = readRepoFile("docs/deployment.md");
+
+    expect(script).toContain("demo-relocation-requests.ts");
+    expect(script).toContain("SUPABASE_URL");
+    expect(script).toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(script).toContain("DEMO_DISPATCHER_USER_ID");
+    expect(script).toContain("DEMO_DRIVER_USER_ID");
+    expect(script).toContain("DEMO_SECONDARY_DRIVER_USER_ID");
+    expect(script).not.toMatch(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+    );
+    expect(guide).toContain("npm run seed:demo");
+  });
 });

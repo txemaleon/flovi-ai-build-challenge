@@ -63,46 +63,239 @@ class DriverRuntimeConfig {
 List<DriverGig> seedDriverGigs() {
   return [
     DriverGig(
-      id: 'gig-1',
-      origin: 'Madrid Chamartin',
-      destination: 'Seville Station',
+      id: 'demo-001',
+      origin: 'Madrid',
+      destination: 'Barcelona',
       scheduledAt: DateTime.utc(2026, 7, 10, 9, 30),
-      notes: 'Pickup at the north entrance.',
+      notes: 'Executive sedan ready at the airport lot.',
       status: 'available',
     ),
     DriverGig(
-      id: 'gig-2',
-      origin: 'Barcelona Sants',
-      destination: 'Valencia Port',
+      id: 'demo-002',
+      origin: 'Barcelona',
+      destination: 'Valencia',
       scheduledAt: DateTime.utc(2026, 7, 12, 15),
       notes: 'Bring parking ticket.',
       status: 'booked',
       driverId: 'demo-driver',
     ),
     DriverGig(
-      id: 'gig-3',
-      origin: 'Seville Station',
-      destination: 'Malaga Airport',
+      id: 'demo-003',
+      origin: 'Valencia',
+      destination: 'Alicante',
+      scheduledAt: DateTime.utc(2026, 7, 12, 15, 45),
+      notes: 'Suggested continuation from Valencia.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-004',
+      origin: 'Seville',
+      destination: 'Malaga',
       scheduledAt: DateTime.utc(2026, 7, 13, 11),
       notes: 'Completed demo relocation.',
       status: 'completed',
       driverId: 'demo-driver',
     ),
     DriverGig(
-      id: 'gig-4',
-      origin: 'Bilbao Depot',
+      id: 'demo-005',
+      origin: 'Malaga',
+      destination: 'Marbella',
+      scheduledAt: DateTime.utc(2026, 7, 13, 13, 30),
+      notes: 'coastal hotel handoff with valet contact.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-006',
+      origin: 'Bilbao',
       destination: 'San Sebastian',
       scheduledAt: DateTime.utc(2026, 7, 14, 8, 15),
       notes: 'Cancelled dispatcher request.',
       status: 'cancelled',
     ),
     DriverGig(
-      id: 'gig-5',
-      origin: 'Valencia Port',
-      destination: 'Madrid Chamartin',
-      scheduledAt: DateTime.utc(2026, 7, 15, 10),
-      notes: 'Open relocation request.',
+      id: 'demo-007',
+      origin: 'Zaragoza',
+      destination: 'Madrid',
+      scheduledAt: DateTime.utc(2026, 7, 14, 8),
+      notes: 'SUV, return paperwork in glovebox.',
       status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-008',
+      origin: 'A Coruna',
+      destination: 'Bilbao',
+      scheduledAt: DateTime.utc(2026, 7, 14, 10, 30),
+      notes: 'Booked northern corridor relocation.',
+      status: 'booked',
+      driverId: 'demo-driver-2',
+    ),
+    DriverGig(
+      id: 'demo-009',
+      origin: 'Palma',
+      destination: 'Barcelona',
+      scheduledAt: DateTime.utc(2026, 7, 14, 12, 15),
+      notes: 'Ferry arrival confirmed.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-010',
+      origin: 'Alicante',
+      destination: 'Valencia',
+      scheduledAt: DateTime.utc(2026, 7, 14, 17, 30),
+      notes: 'Completed same-day coastal return.',
+      status: 'completed',
+      driverId: 'demo-driver-2',
+    ),
+    DriverGig(
+      id: 'demo-011',
+      origin: 'Madrid',
+      destination: 'Seville',
+      scheduledAt: DateTime.utc(2026, 7, 15, 7, 45),
+      notes: 'Open request, train station delivery.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-012',
+      origin: 'San Sebastian',
+      destination: 'Bilbao',
+      scheduledAt: DateTime.utc(2026, 7, 15, 9),
+      notes: 'Booked short-hop handoff.',
+      status: 'booked',
+      driverId: 'demo-driver',
+    ),
+    DriverGig(
+      id: 'demo-013',
+      origin: 'Bilbao',
+      destination: 'Zaragoza',
+      scheduledAt: DateTime.utc(2026, 7, 15, 12, 30),
+      notes: 'Suggested after Bilbao drop-off.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-014',
+      origin: 'Barcelona',
+      destination: 'Palma',
+      scheduledAt: DateTime.utc(2026, 7, 15, 18, 45),
+      notes: 'Cancelled due to ferry delay.',
+      status: 'cancelled',
+    ),
+    DriverGig(
+      id: 'demo-015',
+      origin: 'Marbella',
+      destination: 'Malaga',
+      scheduledAt: DateTime.utc(2026, 7, 16, 8, 20),
+      notes: 'Convertible, pickup at resort valet.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-016',
+      origin: 'Valencia',
+      destination: 'Zaragoza',
+      scheduledAt: DateTime.utc(2026, 7, 16, 10, 10),
+      notes: 'Completed regional fleet balancing move.',
+      status: 'completed',
+      driverId: 'demo-driver',
+    ),
+    DriverGig(
+      id: 'demo-017',
+      origin: 'Malaga',
+      destination: 'Seville',
+      scheduledAt: DateTime.utc(2026, 7, 16, 14),
+      notes: 'Booked airport-to-city relocation.',
+      status: 'booked',
+      driverId: 'demo-driver-2',
+    ),
+    DriverGig(
+      id: 'demo-018',
+      origin: 'Alicante',
+      destination: 'Madrid',
+      scheduledAt: DateTime.utc(2026, 7, 17, 8, 45),
+      notes: 'Open high-priority sedan transfer.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-019',
+      origin: 'Seville',
+      destination: 'Marbella',
+      scheduledAt: DateTime.utc(2026, 7, 17, 12),
+      notes: 'Cancelled by dispatcher after duplicate booking.',
+      status: 'cancelled',
+    ),
+    DriverGig(
+      id: 'demo-020',
+      origin: 'Zaragoza',
+      destination: 'Barcelona',
+      scheduledAt: DateTime.utc(2026, 7, 17, 15, 15),
+      notes: 'Open EV transfer, charging cable included.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-021',
+      origin: 'A Coruna',
+      destination: 'Madrid',
+      scheduledAt: DateTime.utc(2026, 7, 18, 9, 30),
+      notes: 'Completed long-haul delivery.',
+      status: 'completed',
+      driverId: 'demo-driver-2',
+    ),
+    DriverGig(
+      id: 'demo-022',
+      origin: 'Palma',
+      destination: 'Alicante',
+      scheduledAt: DateTime.utc(2026, 7, 18, 13, 40),
+      notes: 'Open island arrival request.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-023',
+      origin: 'Madrid',
+      destination: 'A Coruna',
+      scheduledAt: DateTime.utc(2026, 7, 18, 16, 25),
+      notes: 'Booked northbound delivery.',
+      status: 'booked',
+      driverId: 'demo-driver',
+    ),
+    DriverGig(
+      id: 'demo-024',
+      origin: 'Barcelona',
+      destination: 'Bilbao',
+      scheduledAt: DateTime.utc(2026, 7, 19, 8, 5),
+      notes: 'Open dealer exchange.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-025',
+      origin: 'San Sebastian',
+      destination: 'A Coruna',
+      scheduledAt: DateTime.utc(2026, 7, 19, 11, 50),
+      notes: 'Completed northern coast transfer.',
+      status: 'completed',
+      driverId: 'demo-driver',
+    ),
+    DriverGig(
+      id: 'demo-026',
+      origin: 'Marbella',
+      destination: 'Valencia',
+      scheduledAt: DateTime.utc(2026, 7, 19, 17, 35),
+      notes: 'Cancelled maintenance hold.',
+      status: 'cancelled',
+    ),
+    DriverGig(
+      id: 'demo-027',
+      origin: 'Malaga',
+      destination: 'Marbella',
+      scheduledAt: DateTime.utc(2026, 7, 21, 9),
+      notes: 'Later coastal request outside the default window.',
+      status: 'available',
+    ),
+    DriverGig(
+      id: 'demo-028',
+      origin: 'Bilbao',
+      destination: 'Madrid',
+      scheduledAt: DateTime.utc(2026, 7, 21, 15, 20),
+      notes: 'Booked return to central fleet.',
+      status: 'booked',
+      driverId: 'demo-driver-2',
     ),
   ];
 }
@@ -572,6 +765,10 @@ class DriverApp extends StatefulWidget {
 class _DriverAppState extends State<DriverApp> {
   late Future<DriverGigLists> _gigLists;
   VoidCallback? _unsubscribeFromRealtime;
+  String _originFilter = '';
+  String _destinationFilter = '';
+  String _fromFilter = '';
+  String _toFilter = '';
 
   @override
   void initState() {
@@ -645,19 +842,108 @@ class _DriverAppState extends State<DriverApp> {
 
           final gigLists = snapshot.data ??
               const DriverGigLists(available: [], booked: [], completed: []);
+          final filteredAvailable = filterDriverGigs(
+            gigLists.available,
+            origin: _originFilter,
+            destination: _destinationFilter,
+            fromDate: _fromFilter,
+            toDate: _toFilter,
+          );
+          final suggestedNext = suggestedNextGigs(gigLists);
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: 180,
+                    child: TextField(
+                      key: const ValueKey('driver-origin-filter'),
+                      decoration: const InputDecoration(labelText: 'Origin'),
+                      onChanged: (value) {
+                        setState(() {
+                          _originFilter = value;
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 180,
+                    child: TextField(
+                      key: const ValueKey('driver-destination-filter'),
+                      decoration:
+                          const InputDecoration(labelText: 'Destination'),
+                      onChanged: (value) {
+                        setState(() {
+                          _destinationFilter = value;
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 160,
+                    child: TextField(
+                      key: const ValueKey('driver-from-filter'),
+                      decoration: const InputDecoration(labelText: 'From'),
+                      onChanged: (value) {
+                        setState(() {
+                          _fromFilter = value;
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(
+                    width: 160,
+                    child: TextField(
+                      key: const ValueKey('driver-to-filter'),
+                      decoration: const InputDecoration(labelText: 'To'),
+                      onChanged: (value) {
+                        setState(() {
+                          _toFilter = value;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (suggestedNext.isNotEmpty) ...[
+                const Text(
+                  'Suggested next',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 12),
+                Column(
+                  key: const ValueKey('suggested-next-gigs'),
+                  children: suggestedNext
+                      .map(
+                        (gig) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: DriverGigTile(
+                            gig: gig,
+                            action: ElevatedButton(
+                              onPressed: () => _bookGig(gig),
+                              child: const Text('Book'),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+              ],
               const Text(
                 'Available gigs',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
-              if (gigLists.available.isEmpty)
+              if (filteredAvailable.isEmpty)
                 const Text('No available gigs yet.')
               else
-                ...gigLists.available.map(
+                ...filteredAvailable.map(
                   (gig) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: DriverGigTile(
@@ -781,6 +1067,66 @@ class DriverGigTile extends StatelessWidget {
       ),
     );
   }
+}
+
+List<DriverGig> filterDriverGigs(
+  List<DriverGig> gigs, {
+  required String origin,
+  required String destination,
+  required String fromDate,
+  required String toDate,
+}) {
+  final normalizedOrigin = origin.trim().toLowerCase();
+  final normalizedDestination = destination.trim().toLowerCase();
+  final from = parseDateStart(fromDate);
+  final to = parseDateEnd(toDate);
+
+  return gigs
+      .where(
+        (gig) =>
+            normalizedOrigin.isEmpty ||
+            gig.origin.toLowerCase() == normalizedOrigin,
+      )
+      .where(
+        (gig) =>
+            normalizedDestination.isEmpty ||
+            gig.destination.toLowerCase() == normalizedDestination,
+      )
+      .where((gig) => from == null || !gig.scheduledAt.isBefore(from))
+      .where((gig) => to == null || !gig.scheduledAt.isAfter(to))
+      .toList()
+    ..sort((left, right) => left.scheduledAt.compareTo(right.scheduledAt));
+}
+
+List<DriverGig> suggestedNextGigs(DriverGigLists gigLists) {
+  final history = [...gigLists.booked, ...gigLists.completed]
+    ..sort((left, right) => right.scheduledAt.compareTo(left.scheduledAt));
+
+  if (history.isEmpty) {
+    return [];
+  }
+
+  final latest = history.first;
+
+  return gigLists.available
+      .where((gig) => gig.origin == latest.destination)
+      .where((gig) => gig.scheduledAt.isAfter(latest.scheduledAt))
+      .toList()
+    ..sort((left, right) => left.scheduledAt.compareTo(right.scheduledAt));
+}
+
+DateTime? parseDateStart(String value) {
+  final parsed = DateTime.tryParse(value.trim());
+  return parsed == null
+      ? null
+      : DateTime.utc(parsed.year, parsed.month, parsed.day);
+}
+
+DateTime? parseDateEnd(String value) {
+  final parsed = DateTime.tryParse(value.trim());
+  return parsed == null
+      ? null
+      : DateTime.utc(parsed.year, parsed.month, parsed.day, 23, 59, 59, 999);
 }
 
 String formatScheduledAt(DateTime value) {

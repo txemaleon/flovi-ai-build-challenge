@@ -3,6 +3,39 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flovi_driver/main.dart';
 
 void main() {
+  test('seed driver gigs provide a populated Spain demo dataset', () {
+    final gigs = seedDriverGigs();
+    final places = gigs
+        .expand((gig) => [gig.origin, gig.destination])
+        .toSet()
+        .toList()
+      ..sort();
+
+    expect(gigs, hasLength(28));
+    expect(gigs.map((gig) => gig.status).toSet(), {
+      'available',
+      'booked',
+      'completed',
+      'cancelled',
+    });
+    expect(
+        places,
+        containsAll([
+          'Madrid',
+          'Barcelona',
+          'Valencia',
+          'Seville',
+          'Malaga',
+          'Marbella',
+          'Bilbao',
+          'San Sebastian',
+          'Zaragoza',
+          'Alicante',
+          'A Coruna',
+          'Palma',
+        ]));
+  });
+
   test('in-memory driver gig service returns available gigs sorted by time',
       () async {
     final service = InMemoryDriverGigService([
@@ -121,6 +154,109 @@ void main() {
       'Madrid Chamartin to Seville Station',
       'Barcelona Sants to Valencia Port',
     ]);
+  });
+
+  testWidgets('driver filters available gigs by places and date window', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverApp(
+          driverId: 'driver-1',
+          service: InMemoryDriverGigService([
+            DriverGig(
+              id: 'gig-match',
+              origin: 'Malaga',
+              destination: 'Marbella',
+              scheduledAt: DateTime.utc(2026, 7, 13, 13, 30),
+              notes: 'coastal request',
+              status: 'available',
+            ),
+            DriverGig(
+              id: 'gig-other',
+              origin: 'Madrid',
+              destination: 'Barcelona',
+              scheduledAt: DateTime.utc(2026, 7, 14, 8),
+              notes: 'airport request',
+              status: 'available',
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byKey(const ValueKey('driver-origin-filter')), 'Malaga');
+    await tester.enterText(
+      find.byKey(const ValueKey('driver-destination-filter')),
+      'Marbella',
+    );
+    await tester.enterText(
+        find.byKey(const ValueKey('driver-from-filter')), '2026-07-13');
+    await tester.enterText(
+        find.byKey(const ValueKey('driver-to-filter')), '2026-07-13');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Malaga to Marbella'), findsOneWidget);
+    expect(find.text('Madrid to Barcelona'), findsNothing);
+  });
+
+  testWidgets('driver sees suggested next gigs after their latest route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverApp(
+          driverId: 'driver-1',
+          service: InMemoryDriverGigService([
+            DriverGig(
+              id: 'gig-completed',
+              origin: 'Barcelona',
+              destination: 'Valencia',
+              scheduledAt: DateTime.utc(2026, 7, 12, 15),
+              notes: 'completed request',
+              status: 'completed',
+              driverId: 'driver-1',
+            ),
+            DriverGig(
+              id: 'gig-suggested',
+              origin: 'Valencia',
+              destination: 'Alicante',
+              scheduledAt: DateTime.utc(2026, 7, 13, 9),
+              notes: 'next available request',
+              status: 'available',
+            ),
+            DriverGig(
+              id: 'gig-before',
+              origin: 'Valencia',
+              destination: 'Madrid',
+              scheduledAt: DateTime.utc(2026, 7, 12, 10),
+              notes: 'too early',
+              status: 'available',
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Suggested next'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('suggested-next-gigs')),
+        matching: find.text('Valencia to Alicante'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('suggested-next-gigs')),
+        matching: find.text('Valencia to Madrid'),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('driver books a gig and sees it in the booked list', (

@@ -329,6 +329,38 @@ Delivery:
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 13 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
 
+## 2026-07-08 - Slice 13
+
+Prompt: make the demo feel populated and let dispatcher/driver users choose relocations by place and time without geolocation.
+
+Constraints:
+
+- Add a reusable demo dataset with at least 28 relocation requests across Madrid, Barcelona, Valencia, Seville, Malaga, Marbella, Bilbao, San Sebastian, Zaragoza, Alicante, A Coruna, and Palma.
+- Include available/open, booked, completed, and cancelled lifecycle statuses.
+- Use the dataset in local/fallback mode for dispatcher and driver while keeping Supabase runtime unchanged, except for a seed script/documentation.
+- Add a Supabase demo seed script that uses env vars only and contains no hardcoded personal user IDs.
+- Dispatcher adds origin/destination autocomplete, text search, status filter, date window filter, and clearer assignment visibility.
+- Driver adds origin/destination filters, date window filter, pickup-time sort, and a suggested-next section based on the latest booked/completed destination.
+- Keep the UI compact, calm, accessible, mobile-safe, and within the current framework.
+- No deployment work or real secrets.
+- Keep TypeScript coverage at 100%.
+
+Delivery:
+
+- Added a canonical 28-request Spain demo dataset in core with requests across Madrid, Barcelona, Valencia, Seville, Malaga, Marbella, Bilbao, San Sebastian, Zaragoza, Alicante, A Coruna, and Palma.
+- Included all lifecycle statuses in the dataset: available/open, booked, completed, and cancelled.
+- Added exported core filtering helpers for text search, exact origin/destination filters, status filters, inclusive scheduled date windows, scheduled-time sorting, and sorted place options for autocomplete controls.
+- Wired dispatcher local fallback mode to a demo in-memory runtime seeded from the shared core dataset when Supabase public env vars are missing. The explicit missing-configuration shell remains available when no runtime is injected.
+- Added dispatcher controls for text search, origin/destination autocomplete, status filters, date window filtering, and assigned-driver visibility for booked/completed requests.
+- Expanded the Flutter driver fallback data to the same 28 demo records and added origin/destination filters, inclusive date filters, scheduled-time sorting, and a suggested-next section based on the latest booked/completed destination.
+- Added `scripts/seed-supabase-demo-data.mjs` plus root `npm run seed:demo`. The script reads the shared core dataset, uses env vars for Supabase URL/service key and demo auth user IDs, generates deterministic request UUIDs, and does not commit real secrets or personal user IDs.
+- Updated `docs/deployment.md` with the demo seed command and required env vars.
+- Verification: `npm test` passed with dispatcher 5 test files / 48 tests and core 4 test files / 41 tests.
+- Verification: `npm run coverage` passed. Dispatcher coverage: 100% statements `(179/179)`, 100% branches `(134/134)`, 100% functions `(72/72)`, 100% lines `(173/173)`. Core coverage: 100% statements `(105/105)`, 100% branches `(69/69)`, 100% functions `(44/44)`, 100% lines `(104/104)`.
+- Verification: `npm run typecheck` passed for dispatcher `vue-tsc` and core `tsc`.
+- Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 16 tests passed.
+- Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
+
 ## 2026-07-08 - Slice 11
 
 Prompt: make the relocation lifecycle clear after booking: Open, Booked, Completed, Cancelled.

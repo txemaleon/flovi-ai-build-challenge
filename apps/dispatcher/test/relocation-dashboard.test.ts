@@ -146,6 +146,101 @@ describe("RelocationDashboard", () => {
     expect(wrapper.text()).not.toContain("Bilbao Depot");
   });
 
+  it("filters requests by text, origin, destination, and scheduled date window", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([
+          {
+            id: "request-1",
+            dispatcherId: "dispatcher-1",
+            origin: "Malaga",
+            destination: "Marbella",
+            scheduledAt: "2026-07-13T13:30:00.000Z",
+            notes: "coastal hotel handoff",
+            status: "available"
+          },
+          {
+            id: "request-2",
+            dispatcherId: "dispatcher-1",
+            origin: "Madrid",
+            destination: "Barcelona",
+            scheduledAt: "2026-07-14T08:00:00.000Z",
+            notes: "airport lot",
+            status: "available"
+          }
+        ])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+    await wrapper.find('[data-test="request-search"]').setValue("coastal");
+    await wrapper.find('[data-test="filter-origin"]').setValue("Malaga");
+    await wrapper.find('[data-test="filter-destination"]').setValue("Marbella");
+    await wrapper.find('[data-test="filter-from"]').setValue("2026-07-13");
+    await wrapper.find('[data-test="filter-to"]').setValue("2026-07-13");
+
+    expect(wrapper.text()).toContain("Malaga");
+    expect(wrapper.text()).toContain("Marbella");
+    expect(wrapper.text()).not.toContain("Madrid");
+    expect(wrapper.text()).not.toContain("Barcelona");
+  });
+
+  it("shows assignment visibility for booked and completed requests", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([
+          {
+            id: "request-booked",
+            dispatcherId: "dispatcher-1",
+            origin: "Valencia",
+            destination: "Madrid",
+            scheduledAt: "2026-07-10T15:00:00.000Z",
+            notes: "",
+            status: "booked",
+            driverId: "driver-1"
+          },
+          {
+            id: "request-completed",
+            dispatcherId: "dispatcher-1",
+            origin: "Seville",
+            destination: "Malaga",
+            scheduledAt: "2026-07-11T12:00:00.000Z",
+            notes: "",
+            status: "completed",
+            driverId: "driver-2"
+          }
+        ])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+
+    expect(wrapper.findAll('[data-test="assignment"]').map((node) => node.text()))
+      .toEqual(["Assigned driver-1", "Assigned driver-2"]);
+  });
+
+  it("shows unassigned visibility when a booked request has no driver id", async () => {
+    const wrapper = mount(RelocationDashboard, {
+      props: {
+        service: createService([
+          {
+            id: "request-booked",
+            dispatcherId: "dispatcher-1",
+            origin: "Valencia",
+            destination: "Madrid",
+            scheduledAt: "2026-07-10T15:00:00.000Z",
+            notes: "",
+            status: "booked"
+          }
+        ])
+      }
+    });
+
+    await wrapper.find('[data-test="refresh"]').trigger("click");
+
+    expect(wrapper.find('[data-test="assignment"]').text()).toBe("Unassigned");
+  });
+
   it("shows an empty filtered state when a status has no requests", async () => {
     const wrapper = mount(RelocationDashboard, {
       props: {
