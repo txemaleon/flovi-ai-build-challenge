@@ -4,8 +4,8 @@ Use this checklist before publishing or sharing the Flovi demo.
 
 ## Local Fallback
 
-- [x] Dispatcher local fallback exists and is covered by tests when Supabase env vars are absent.
-- [x] Driver local fallback exists and is covered by Flutter tests when Supabase env vars are absent.
+- [x] The local fallback dispatcher exists and is covered by tests when Supabase env vars are absent.
+- [x] The local fallback driver exists and is covered by Flutter tests when Supabase env vars are absent.
 - [ ] Optional before presentation: run both local fallback apps manually if the hosted demo is unavailable.
 
 ## Supabase Demo Data
@@ -14,20 +14,21 @@ Use this checklist before publishing or sharing the Flovi demo.
 - [x] Demo data was seeded into the production Supabase project.
 - [x] Seeded dataset includes open, booked, completed, and cancelled examples.
 - [x] Seed script remains documented and env-driven: `npm run seed:demo`.
+- [x] Seed command env names are documented: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `DEMO_DISPATCHER_USER_ID`, `DEMO_DRIVER_USER_ID`, and optional `DEMO_SECONDARY_DRIVER_USER_ID`.
 - [ ] Optional before presentation: reseed only if the demo data has been modified during rehearsal.
 
 ## Auth Redirects
 
 - [x] Google OAuth provider is enabled in Supabase.
-- [x] Supabase callback URL is allowed in Google OAuth.
+- [x] Supabase callback URL is allowed in Google OAuth: `/auth/v1/callback`.
 - [x] Hosted dispatcher redirect URL is allowed in Supabase.
 - [x] Hosted driver redirect URL is allowed in Supabase.
 - [x] Supabase OAuth authorize endpoint returns `302` for both hosted redirect URLs.
 
 ## Hosted URLs
 
-- [x] Dispatcher production URL returns HTTP 200.
-- [x] Driver production URL returns HTTP 200.
+- [x] The hosted dispatcher URL returns HTTP 200.
+- [x] The hosted driver URL returns HTTP 200.
 - [x] Dispatcher production bundle contains the Supabase project reference.
 - [x] Driver production bundle contains the Supabase project reference and driver redirect URL.
 - [x] Dispatcher production login renders `Sign in with Google`.
