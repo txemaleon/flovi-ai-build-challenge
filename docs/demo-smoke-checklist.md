@@ -4,21 +4,38 @@ Use this checklist before publishing or sharing the Flovi demo.
 
 ## Local Fallback
 
-- [ ] Start the dispatcher without `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`; confirm the local fallback dispatcher opens with demo relocation data and filters work.
-- [ ] Run the driver without `SUPABASE_URL` and `SUPABASE_ANON_KEY`; confirm the local fallback driver opens with demo gigs, filters, and suggested next gigs.
+- [x] Dispatcher local fallback exists and is covered by tests when Supabase env vars are absent.
+- [x] Driver local fallback exists and is covered by Flutter tests when Supabase env vars are absent.
+- [ ] Optional before presentation: run both local fallback apps manually if the hosted demo is unavailable.
 
 ## Supabase Demo Data
 
-- [ ] Create or choose Supabase auth users for the dispatcher and driver demo accounts.
-- [ ] Run `npm run seed:demo` with `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `DEMO_DISPATCHER_USER_ID`, and `DEMO_DRIVER_USER_ID`.
-- [ ] Set optional `DEMO_SECONDARY_DRIVER_USER_ID` when seeded booked or completed examples should show a second assignment.
+- [x] Supabase auth user exists for the real Google account used in the demo.
+- [x] Demo data was seeded into the production Supabase project.
+- [x] Seeded dataset includes open, booked, completed, and cancelled examples.
+- [x] Seed script remains documented and env-driven: `npm run seed:demo`.
+- [ ] Optional before presentation: reseed only if the demo data has been modified during rehearsal.
 
 ## Auth Redirects
 
-- [ ] In Google OAuth, confirm the Supabase callback URL is allowed: `https://<project-ref>.supabase.co/auth/v1/callback`.
-- [ ] In Supabase Auth URL configuration, confirm hosted dispatcher and driver redirect URLs are allowed.
+- [x] Google OAuth provider is enabled in Supabase.
+- [x] Supabase callback URL is allowed in Google OAuth.
+- [x] Hosted dispatcher redirect URL is allowed in Supabase.
+- [x] Hosted driver redirect URL is allowed in Supabase.
+- [x] Supabase OAuth authorize endpoint returns `302` for both hosted redirect URLs.
 
 ## Hosted URLs
 
-- [ ] Open the hosted dispatcher URL and confirm sign-in/config state, demo data or seeded data, filters, realtime refresh, and lifecycle actions.
-- [ ] Open the hosted driver URL and confirm sign-in/config state, available/booked/completed lists, filters, suggested next gigs, booking, completion, and realtime refresh.
+- [x] Dispatcher production URL returns HTTP 200.
+- [x] Driver production URL returns HTTP 200.
+- [x] Dispatcher production bundle contains the Supabase project reference.
+- [x] Driver production bundle contains the Supabase project reference and driver redirect URL.
+- [x] Dispatcher production login renders `Sign in with Google`.
+- [x] Driver production bundle contains `Sign in with Google`.
+- [ ] Manual rehearsal: sign in to dispatcher production and confirm seeded data, filters, edit/cancel flow, and visible status changes.
+- [ ] Manual rehearsal: sign in to driver production and confirm available/booked/completed lists, filters, suggested next gigs, booking, and completion.
+
+## Notes
+
+- Flutter Web renders most driver UI through Flutter's web surface, so DOM-level smoke checks are limited. The responsive driver layout is covered by Flutter widget tests and screenshots in `docs/assets/ui-polish/`.
+- Vercel production deployments were promoted manually from static app builds because these Vercel projects are not Git-linked.

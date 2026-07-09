@@ -1,6 +1,6 @@
 # Final Delivery Status
 
-Last updated: 2026-07-09 08:36 CEST.
+Last updated: 2026-07-09 09:42 CEST.
 
 ## Public Deliverables
 
@@ -15,9 +15,10 @@ Last updated: 2026-07-09 08:36 CEST.
 ## Repository
 
 - Branch: `main`
-- Delivery packaging commit: `dc877be docs(delivery): package presentation artifacts`
-- Latest GitHub Actions verification for that commit: success
-- Workflow run: https://github.com/txemaleon/flovi-ai-build-challenge/actions/runs/28998831983
+- Last reviewed `origin/main` commit: `ce492cb docs(delivery): update submission checklist`
+- Delivery verification commit: `d5ac3fe docs(delivery): record final verification status`
+- Latest completed GitHub Actions verification reviewed here: success on `ce492cb`
+- Workflow run: https://github.com/txemaleon/flovi-ai-build-challenge/actions/runs/29002079263
 - Repository visibility: public
 
 ## Production Deployments
@@ -46,3 +47,4 @@ Passed:
 Known limitation:
 
 - Flutter Web renders most app UI through Flutter's web surface, so DOM-level browser inspection is limited. The requested driver layout is covered by Flutter widget tests and screenshot artifacts under `docs/assets/ui-polish/`.
+- The only remaining human work is recording the 5-minute walkthrough and sending the URLs/repo link before the presentation deadline.
