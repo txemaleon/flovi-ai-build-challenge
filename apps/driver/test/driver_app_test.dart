@@ -508,6 +508,33 @@ void main() {
     );
   });
 
+  testWidgets('driver sign-in card matches dispatcher login width on desktop', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1200, 900);
+    addTearDown(() {
+      tester.view.resetDevicePixelRatio();
+      tester.view.resetPhysicalSize();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverShell(
+          authService: FakeDriverAuthService(),
+          createGigService: (_) => InMemoryDriverGigService([]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final card =
+        tester.getRect(find.byKey(const ValueKey('driver-sign-in-card')));
+
+    expect(card.width, 576);
+  });
+
   testWidgets('driver app keeps mobile operations sections visible', (
     tester,
   ) async {

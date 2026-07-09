@@ -499,79 +499,83 @@ class _DriverShellState extends State<DriverShell> {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x100f172a),
-                          blurRadius: 24,
-                          offset: Offset(0, 10),
-                        ),
-                        BoxShadow(color: Color(0x0f0f172a), spreadRadius: 1),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'Driver operations',
-                            style: TextStyle(
-                              color: Color(0xff64748b),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                            ),
+                  child: ConstrainedBox(
+                    key: const ValueKey('driver-sign-in-card'),
+                    constraints: const BoxConstraints(maxWidth: 576),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x100f172a),
+                            blurRadius: 24,
+                            offset: Offset(0, 10),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Sign in to browse and book gigs',
-                            style: TextStyle(
-                              color: Color(0xff172033),
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Use your dispatcher-approved Google account to view open, booked, and completed relocations.',
-                            style: TextStyle(
-                              color: Color(0xff64748b),
-                              fontSize: 14,
-                              height: 1.45,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          GoogleSignInButton(onPressed: _signInWithGoogle),
-                          if (_errorMessage != null) ...[
-                            const SizedBox(height: 12),
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: const Color(0xfffff1f2),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(0x1fb91c1c),
-                                ),
+                          BoxShadow(color: Color(0x0f0f172a), spreadRadius: 1),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              'Driver operations',
+                              style: TextStyle(
+                                color: Color(0xff64748b),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
                               ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10),
-                                child: Text(
-                                  _errorMessage!,
-                                  style: const TextStyle(
-                                    color: Color(0xffb91c1c),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Sign in to browse and book gigs',
+                              style: TextStyle(
+                                color: Color(0xff172033),
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Use your dispatcher-approved Google account to view open, booked, and completed relocations.',
+                              style: TextStyle(
+                                color: Color(0xff64748b),
+                                fontSize: 14,
+                                height: 1.45,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            GoogleSignInButton(onPressed: _signInWithGoogle),
+                            if (_errorMessage != null) ...[
+                              const SizedBox(height: 12),
+                              DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xfffff1f2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: const Color(0x1fb91c1c),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: const TextStyle(
+                                      color: Color(0xffb91c1c),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
