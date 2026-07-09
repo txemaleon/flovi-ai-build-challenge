@@ -76,6 +76,19 @@ class FloviDriverTheme {
           borderSide: const BorderSide(color: accent, width: 1.5),
         ),
       ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: accent,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(48, 42),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(foregroundColor: const Color(0xff475569)),
+      ),
     );
   }
 }
@@ -1054,6 +1067,7 @@ class _DriverAppState extends State<DriverApp> {
             toDate: _toFilter,
           );
           final suggestedNext = suggestedNextGigs(gigLists);
+          final placeOptions = driverPlaceOptions(gigLists);
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -1096,29 +1110,27 @@ class _DriverAppState extends State<DriverApp> {
                                 key: const ValueKey('driver-place-filter-row'),
                                 shouldStack: shouldStack,
                                 fields: [
-                                  TextField(
-                                    key: const ValueKey('driver-origin-filter'),
-                                    decoration: const InputDecoration(
-                                      labelText: 'Origin',
+                                  DriverPlaceAutocompleteField(
+                                    fieldKey:
+                                        const ValueKey('driver-origin-filter'),
+                                    label: 'Origin',
+                                    optionKeyPrefix: 'driver-origin-option',
+                                    options: placeOptions,
+                                    onChanged: (value) => setState(
+                                      () => _originFilter = value,
                                     ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _originFilter = value;
-                                      });
-                                    },
                                   ),
-                                  TextField(
-                                    key: const ValueKey(
+                                  DriverPlaceAutocompleteField(
+                                    fieldKey: const ValueKey(
                                       'driver-destination-filter',
                                     ),
-                                    decoration: const InputDecoration(
-                                      labelText: 'Destination',
+                                    label: 'Destination',
+                                    optionKeyPrefix:
+                                        'driver-destination-option',
+                                    options: placeOptions,
+                                    onChanged: (value) => setState(
+                                      () => _destinationFilter = value,
                                     ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _destinationFilter = value;
-                                      });
-                                    },
                                   ),
                                 ],
                               ),
@@ -1127,25 +1139,21 @@ class _DriverAppState extends State<DriverApp> {
                                 key: const ValueKey('driver-date-filter-row'),
                                 shouldStack: shouldStack,
                                 fields: [
-                                  TextField(
-                                    key: const ValueKey('driver-from-filter'),
-                                    decoration: const InputDecoration(
-                                        labelText: 'From'),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _fromFilter = value;
-                                      });
-                                    },
+                                  DriverDateFilterField(
+                                    fieldKey:
+                                        const ValueKey('driver-from-filter'),
+                                    label: 'From',
+                                    value: _fromFilter,
+                                    onChanged: (value) =>
+                                        setState(() => _fromFilter = value),
                                   ),
-                                  TextField(
-                                    key: const ValueKey('driver-to-filter'),
-                                    decoration:
-                                        const InputDecoration(labelText: 'To'),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _toFilter = value;
-                                      });
-                                    },
+                                  DriverDateFilterField(
+                                    fieldKey:
+                                        const ValueKey('driver-to-filter'),
+                                    label: 'To',
+                                    value: _toFilter,
+                                    onChanged: (value) =>
+                                        setState(() => _toFilter = value),
                                   ),
                                 ],
                               ),
@@ -1209,29 +1217,27 @@ class _DriverAppState extends State<DriverApp> {
                   ),
                 ),
               const SizedBox(height: 16),
-              const SectionTitle('Booked gigs'),
-              const SizedBox(height: 12),
-              if (gigLists.booked.isEmpty)
-                const EmptySection(message: 'No booked gigs yet.')
-              else
-                Column(
-                  key: const ValueKey('booked-gigs'),
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: gigLists.booked
-                      .map(
-                        (gig) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: DriverGigTile(
-                            gig: gig,
-                            action: ElevatedButton(
-                              onPressed: () => _completeGig(gig),
-                              child: const Text('Complete'),
-                            ),
+              DriverGigDisclosureSection(
+                tileKey: const ValueKey('booked-gigs-dropdown'),
+                title: 'Booked gigs',
+                count: gigLists.booked.length,
+                emptyMessage: 'No booked gigs yet.',
+                contentKey: const ValueKey('booked-gigs'),
+                children: gigLists.booked
+                    .map(
+                      (gig) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: DriverGigTile(
+                          gig: gig,
+                          action: ElevatedButton(
+                            onPressed: () => _completeGig(gig),
+                            child: const Text('Complete'),
                           ),
                         ),
-                      )
-                      .toList(),
-                ),
+                      ),
+                    )
+                    .toList(),
+              ),
               const SizedBox(height: 16),
               const SectionTitle('Completed gigs'),
               const SizedBox(height: 12),
@@ -1253,6 +1259,236 @@ class _DriverAppState extends State<DriverApp> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class DriverPlaceAutocompleteField extends StatelessWidget {
+  const DriverPlaceAutocompleteField({
+    required this.fieldKey,
+    required this.label,
+    required this.optionKeyPrefix,
+    required this.options,
+    required this.onChanged,
+    super.key,
+  });
+
+  final Key fieldKey;
+  final String label;
+  final String optionKeyPrefix;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Autocomplete<String>(
+      optionsBuilder: (textEditingValue) {
+        final query = textEditingValue.text;
+
+        if (query.trim().isEmpty) {
+          return const Iterable<String>.empty();
+        }
+
+        return options.where((option) => placeMatches(option, query)).take(8);
+      },
+      onSelected: onChanged,
+      fieldViewBuilder: (
+        context,
+        textEditingController,
+        focusNode,
+        onFieldSubmitted,
+      ) {
+        return TextField(
+          key: fieldKey,
+          controller: textEditingController,
+          focusNode: focusNode,
+          decoration: InputDecoration(
+            labelText: label,
+            suffixIcon: const Icon(Icons.search, size: 18),
+          ),
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            color: Colors.white,
+            elevation: 8,
+            shadowColor: const Color(0x1a0f172a),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: Color(0xffd9dee8)),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 220, maxWidth: 360),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                shrinkWrap: true,
+                itemCount: options.length,
+                itemBuilder: (context, index) {
+                  final option = options.elementAt(index);
+
+                  return InkWell(
+                    key: ValueKey('$optionKeyPrefix-$option'),
+                    onTap: () => onSelected(option),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      child: Text(
+                        option,
+                        style: const TextStyle(
+                          color: Color(0xff172033),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class DriverDateFilterField extends StatefulWidget {
+  const DriverDateFilterField({
+    required this.fieldKey,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    super.key,
+  });
+
+  final Key fieldKey;
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<DriverDateFilterField> createState() => _DriverDateFilterFieldState();
+}
+
+class _DriverDateFilterFieldState extends State<DriverDateFilterField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(DriverDateFilterField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.value != _controller.text) {
+      _controller.value = TextEditingValue(
+        text: widget.value,
+        selection: TextSelection.collapsed(offset: widget.value.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Future<void> pickDate() async {
+      final parsedDate = parseDateStart(widget.value);
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: parsedDate ?? DateTime.utc(2026, 7, 10),
+        firstDate: DateTime.utc(2026),
+        lastDate: DateTime.utc(2027, 12, 31),
+      );
+
+      if (picked != null) {
+        widget.onChanged(formatDateInput(picked));
+      }
+    }
+
+    return TextField(
+      key: widget.fieldKey,
+      controller: _controller,
+      decoration: InputDecoration(
+        labelText: widget.label,
+        hintText: 'YYYY-MM-DD',
+        suffixIcon: IconButton(
+          tooltip: 'Pick ${widget.label} date',
+          icon: const Icon(Icons.calendar_today_outlined, size: 18),
+          onPressed: pickDate,
+        ),
+      ),
+      keyboardType: TextInputType.datetime,
+      onChanged: widget.onChanged,
+    );
+  }
+}
+
+class DriverGigDisclosureSection extends StatelessWidget {
+  const DriverGigDisclosureSection({
+    required this.tileKey,
+    required this.title,
+    required this.count,
+    required this.emptyMessage,
+    required this.contentKey,
+    required this.children,
+    super.key,
+  });
+
+  final Key tileKey;
+  final String title;
+  final int count;
+  final String emptyMessage;
+  final Key contentKey;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      elevation: 1,
+      shadowColor: const Color(0x140f172a),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: Color(0xffd9dee8)),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: tileKey,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+          childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          title: Row(
+            children: [
+              Expanded(child: SectionTitle(title)),
+              StatusChip(label: 'Booked', count: count),
+            ],
+          ),
+          children: [
+            if (children.isEmpty)
+              EmptySection(message: emptyMessage)
+            else
+              Column(
+                key: contentKey,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: children,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1437,7 +1673,9 @@ class DriverGigTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
+      elevation: 0.5,
+      shadowColor: const Color(0x140f172a),
+      surfaceTintColor: Colors.white,
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -1477,7 +1715,7 @@ class DriverGigTile extends StatelessWidget {
             ],
             if (action != null) ...[
               const SizedBox(height: 10),
-              action!,
+              SizedBox(width: double.infinity, child: action!),
             ],
           ],
         ),
@@ -1493,26 +1731,57 @@ List<DriverGig> filterDriverGigs(
   required String fromDate,
   required String toDate,
 }) {
-  final normalizedOrigin = origin.trim().toLowerCase();
-  final normalizedDestination = destination.trim().toLowerCase();
   final from = parseDateStart(fromDate);
   final to = parseDateEnd(toDate);
 
   return gigs
-      .where(
-        (gig) =>
-            normalizedOrigin.isEmpty ||
-            gig.origin.toLowerCase() == normalizedOrigin,
-      )
-      .where(
-        (gig) =>
-            normalizedDestination.isEmpty ||
-            gig.destination.toLowerCase() == normalizedDestination,
-      )
+      .where((gig) => placeMatches(gig.origin, origin))
+      .where((gig) => placeMatches(gig.destination, destination))
       .where((gig) => from == null || !gig.scheduledAt.isBefore(from))
       .where((gig) => to == null || !gig.scheduledAt.isAfter(to))
       .toList()
     ..sort((left, right) => left.scheduledAt.compareTo(right.scheduledAt));
+}
+
+List<String> driverPlaceOptions(DriverGigLists gigLists) {
+  final options = <String>{};
+
+  for (final gig in [
+    ...gigLists.available,
+    ...gigLists.booked,
+    ...gigLists.completed,
+  ]) {
+    options
+      ..add(gig.origin)
+      ..add(gig.destination);
+  }
+
+  return options.toList()
+    ..sort((left, right) => left.toLowerCase().compareTo(right.toLowerCase()));
+}
+
+bool placeMatches(String place, String query) {
+  final normalizedQuery = normalizePlace(query);
+
+  return normalizedQuery.isEmpty ||
+      normalizePlace(place).contains(normalizedQuery);
+}
+
+String normalizePlace(String value) {
+  return value
+      .trim()
+      .toLowerCase()
+      .replaceAll('á', 'a')
+      .replaceAll('à', 'a')
+      .replaceAll('é', 'e')
+      .replaceAll('è', 'e')
+      .replaceAll('í', 'i')
+      .replaceAll('ï', 'i')
+      .replaceAll('ó', 'o')
+      .replaceAll('ò', 'o')
+      .replaceAll('ú', 'u')
+      .replaceAll('ü', 'u')
+      .replaceAll('ñ', 'n');
 }
 
 List<DriverGig> suggestedNextGigs(DriverGigLists gigLists) {
@@ -1544,6 +1813,13 @@ DateTime? parseDateEnd(String value) {
   return parsed == null
       ? null
       : DateTime.utc(parsed.year, parsed.month, parsed.day, 23, 59, 59, 999);
+}
+
+String formatDateInput(DateTime value) {
+  final month = value.month.toString().padLeft(2, '0');
+  final day = value.day.toString().padLeft(2, '0');
+
+  return '${value.year}-$month-$day';
 }
 
 String formatScheduledAt(DateTime value) {

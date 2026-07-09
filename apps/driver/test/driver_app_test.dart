@@ -156,6 +156,35 @@ void main() {
     ]);
   });
 
+  test('driver place filters match partial city names', () {
+    final filtered = filterDriverGigs(
+      [
+        DriverGig(
+          id: 'gig-match',
+          origin: 'Malaga',
+          destination: 'Marbella',
+          scheduledAt: DateTime.utc(2026, 7, 13, 13, 30),
+          notes: 'coastal request',
+          status: 'available',
+        ),
+        DriverGig(
+          id: 'gig-other',
+          origin: 'Madrid',
+          destination: 'Barcelona',
+          scheduledAt: DateTime.utc(2026, 7, 14, 8),
+          notes: 'airport request',
+          status: 'available',
+        ),
+      ],
+      origin: 'Mal',
+      destination: 'Marb',
+      fromDate: '2026-07-13',
+      toDate: '2026-07-13',
+    );
+
+    expect(filtered.map((gig) => gig.id), ['gig-match']);
+  });
+
   testWidgets('driver filters available gigs by places and date window', (
     tester,
   ) async {
@@ -187,10 +216,10 @@ void main() {
 
     await tester.pumpAndSettle();
     await tester.enterText(
-        find.byKey(const ValueKey('driver-origin-filter')), 'Malaga');
+        find.byKey(const ValueKey('driver-origin-filter')), 'Mal');
     await tester.enterText(
       find.byKey(const ValueKey('driver-destination-filter')),
-      'Marbella',
+      'Marb',
     );
     await tester.enterText(
         find.byKey(const ValueKey('driver-from-filter')), '2026-07-13');
@@ -200,6 +229,36 @@ void main() {
 
     expect(find.text('Malaga to Marbella'), findsOneWidget);
     expect(find.text('Madrid to Barcelona'), findsNothing);
+  });
+
+  testWidgets('driver place filters expose autocomplete options', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverApp(
+          driverId: 'driver-1',
+          service: InMemoryDriverGigService([
+            DriverGig(
+              id: 'gig-match',
+              origin: 'Malaga',
+              destination: 'Marbella',
+              scheduledAt: DateTime.utc(2026, 7, 13, 13, 30),
+              notes: 'coastal request',
+              status: 'available',
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byKey(const ValueKey('driver-origin-filter')), 'Mal');
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('driver-origin-option-Malaga')),
+        findsOneWidget);
   });
 
   testWidgets('driver sees suggested next gigs after their latest route', (
@@ -286,6 +345,11 @@ void main() {
 
     expect(find.text('No available gigs yet.'), findsOneWidget);
     expect(find.text('Booked gigs'), findsOneWidget);
+    expect(find.text('Madrid Chamartin to Seville Station'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('booked-gigs-dropdown')));
+    await tester.pumpAndSettle();
+
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('booked-gigs')),
@@ -319,7 +383,12 @@ void main() {
     );
 
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('booked-gigs-dropdown')));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ElevatedButton, 'Complete'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('booked-gigs-dropdown')));
     await tester.pumpAndSettle();
 
     expect(find.text('No booked gigs yet.'), findsOneWidget);
@@ -484,10 +553,12 @@ void main() {
         find.byKey(const ValueKey('driver-status-navigation')), findsOneWidget);
     expect(find.byKey(const ValueKey('available-gigs')), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('booked-gigs')),
+      find.byKey(const ValueKey('booked-gigs-dropdown')),
       500,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.tap(find.byKey(const ValueKey('booked-gigs-dropdown')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('booked-gigs')), findsOneWidget);
     await tester.scrollUntilVisible(
       find.byKey(const ValueKey('completed-gigs')),
@@ -552,6 +623,15 @@ void main() {
     expect(toTop.dy, fromTop.dy);
     expect(fromTop.dy, greaterThan(originTop.dy));
 
+    final fromField = tester.widget<TextField>(
+      find.byKey(const ValueKey('driver-from-filter')),
+    );
+    final toField = tester.widget<TextField>(
+      find.byKey(const ValueKey('driver-to-filter')),
+    );
+    expect(fromField.keyboardType, TextInputType.datetime);
+    expect(toField.keyboardType, TextInputType.datetime);
+
     final firstCard =
         tester.getRect(find.byKey(const ValueKey('gig-card-gig-1')));
     final secondCard =
@@ -603,10 +683,12 @@ void main() {
 
     expect(find.text('Madrid Chamartin to Seville Station'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('booked-gigs')),
+      find.byKey(const ValueKey('booked-gigs-dropdown')),
       500,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.tap(find.byKey(const ValueKey('booked-gigs-dropdown')));
+    await tester.pumpAndSettle();
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('booked-gigs')),
