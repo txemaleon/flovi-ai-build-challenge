@@ -757,6 +757,27 @@ void main() {
     expect(find.text('Sign in with Google'), findsOneWidget);
   });
 
+  test('driver auth keeps reload signed out after explicit sign-out', () async {
+    final signOutState = InMemoryDriverSignOutState();
+    final firstAuth = InMemoryDriverAuthService(
+      const DriverSession(userId: 'demo-driver'),
+      signOutState: signOutState,
+    );
+
+    await firstAuth.signOut();
+
+    final reloadedAuth = InMemoryDriverAuthService(
+      const DriverSession(userId: 'demo-driver'),
+      signOutState: signOutState,
+    );
+
+    expect(await reloadedAuth.currentSession(), isNull);
+
+    await reloadedAuth.signInWithGoogle();
+
+    expect(await reloadedAuth.currentSession(), isNotNull);
+  });
+
   testWidgets('driver shell cleans up realtime subscription on sign-out', (
     tester,
   ) async {
@@ -878,6 +899,11 @@ class FakeDriverAuthService implements DriverAuthService {
 
   @override
   Future<DriverSession?> currentSession() async => session;
+
+  @override
+  VoidCallback subscribeToAuthChanges(ValueChanged<DriverSession?> onChange) {
+    return () {};
+  }
 
   @override
   Future<void> signInWithGoogle() async {
