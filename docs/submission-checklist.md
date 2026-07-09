@@ -2,26 +2,32 @@
 
 ## Links
 
-- [ ] Dispatcher live URL: https://flovi-dispatcher.vercel.app
-- [ ] Driver live URL: https://flovi-driver.vercel.app
-- [ ] Public repo: https://github.com/txemaleon/flovi-ai-build-challenge
-- [ ] Prompt log: `docs/prompt-log.md`
-- [ ] Reflection: `docs/reflection.md`
-- [ ] Walkthrough script: `docs/walkthrough-script.md`
+- [x] Dispatcher live URL: https://flovi-dispatcher.vercel.app
+- [x] Driver live URL: https://flovi-driver.vercel.app
+- [x] Public repo: https://github.com/txemaleon/flovi-ai-build-challenge
+- [x] Prompt log: `docs/prompt-log.md`
+- [x] Reflection: `docs/reflection.md`
+- [x] Walkthrough script: `docs/walkthrough-script.md`
 
 ## Final Technical Checks
 
-- [ ] `git status --short` is clean.
-- [ ] Latest commit is pushed to `origin/main`.
-- [ ] GitHub repository is public.
-- [ ] GitHub Actions verification passes on the latest commit.
-- [ ] Vercel dispatcher deployment points to the latest commit.
-- [ ] Vercel driver deployment points to the latest commit.
-- [ ] Dispatcher production login works with Google.
-- [ ] Driver production login works with Google.
-- [ ] Dispatcher shows seeded demo data.
-- [ ] Driver shows available, booked, completed, and suggested-next flow.
-- [ ] No real secrets are committed.
+- [x] Final delivery verification was recorded at commit `d5ac3fe docs(delivery): record final verification status`.
+- [x] Delivery commits were pushed to `origin/main`.
+- [x] GitHub repository is public.
+- [x] GitHub Actions verification passes on the latest commit: https://github.com/txemaleon/flovi-ai-build-challenge/actions/runs/28999136484
+- [x] Vercel dispatcher production deployment is ready: `dpl_Dytog5w5kYygrZiYgpygxAB6DuCi`.
+- [x] Vercel driver production deployment is ready: `dpl_EbYgJ6HGm4DkdXBtGqtDDHYK4kjx`.
+- [x] Dispatcher production login renders `Sign in with Google`.
+- [x] Driver production bundle contains `Sign in with Google`.
+- [x] Supabase Google OAuth authorize endpoint returns `302` for dispatcher and driver redirects.
+- [x] Production bundles contain the Supabase project reference and driver redirect URL.
+- [x] No real secrets are committed; checked docs, env example, scripts, and migrations for obvious secret values.
+
+## Remaining Human Checks
+
+- [ ] Record the 5-minute walkthrough.
+- [ ] If time allows, manually sign in once in both production apps before the presentation.
+- [ ] Send live URLs and repo link at least 1 hour before the presentation slot.
 
 ## Recording Flow
 
