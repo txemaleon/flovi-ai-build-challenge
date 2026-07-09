@@ -295,6 +295,32 @@ Delivery:
 - Verification: `npm run driver:test` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter test'`; Flutter reported 11 tests passed.
 - Verification: `npm run driver:build` passed using `docker run --rm -v "$PWD/apps/driver:/workspace" -w /workspace ghcr.io/cirruslabs/flutter:stable sh -lc 'flutter pub get && flutter build web'`; Flutter built `build/web`.
 
+## 2026-07-09 - Slice 16
+
+Prompt: prepare the public delivery package for the live presentation.
+
+Constraints:
+
+- Keep this slice documentation-only.
+- Do not change runtime behavior.
+- Make the repository self-explanatory for reviewers.
+- Cover all requested deliverables: live URLs, public repo, prompt log, walkthrough, reflection, and presentation questions.
+- Keep secrets out of docs.
+
+Delivery:
+
+- Added a public `README.md` with live URLs, product flow, architecture, stack, local verification commands, environment notes, and links to delivery artifacts.
+- Added `docs/walkthrough-script.md` with a 5-minute end-to-end presentation flow for dispatcher, driver, sync/backend, and engineering quality.
+- Added `docs/reflection.md` covering what worked, what broke, where AI got in the way, what would improve with another hour, and what this says about software development.
+- Added `docs/presentation-prep.md` with prepared answers for the expected presentation questions.
+- Added `docs/submission-checklist.md` with final technical checks, recording flow, and a submission message template.
+- Updated `docs/task-board.md` with Slice 16 delivery packaging tasks.
+
+Verification:
+
+- `npm test -w @flovi/core -- --run test/deployment-artifacts.test.ts` passed with 1 file and 5 tests.
+- Remaining final checks are tracked in `docs/submission-checklist.md`.
+
 ## 2026-07-08 - Slice 12
 
 Prompt: harden lifecycle authorization so Supabase enforces the same relocation update rules as the apps, even when the Data API is called directly.

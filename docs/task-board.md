@@ -184,6 +184,14 @@
 - [x] Run npm tests, coverage, typecheck, and Docker driver verification
 - [x] Commit Slice 15
 
-## Later Slices
+## Slice 16 - Delivery Packaging
 
-- [ ] Deployment and public demo URLs
+- [x] Add public README with live URLs, architecture, setup, and delivery artifacts
+- [x] Add 5-minute walkthrough script
+- [x] Add reflection notes
+- [x] Add presentation prep answers
+- [x] Add submission checklist and message template
+- [ ] Push final commits to GitHub
+- [ ] Confirm GitHub Actions on latest commit
+- [ ] Confirm Vercel dispatcher and driver production deployments on latest commit
+- [ ] Run final hosted smoke checks
