@@ -393,6 +393,11 @@ void main() {
 
     expect(find.text('No booked gigs yet.'), findsOneWidget);
     expect(find.text('Completed gigs'), findsOneWidget);
+    expect(find.text('Madrid Chamartin to Seville Station'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('completed-gigs-dropdown')));
+    await tester.pumpAndSettle();
+
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('completed-gigs')),
@@ -561,10 +566,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('booked-gigs')), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('completed-gigs')),
+      find.byKey(const ValueKey('completed-gigs-dropdown')),
       500,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.tap(find.byKey(const ValueKey('completed-gigs-dropdown')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('completed-gigs')), findsOneWidget);
   });
 

@@ -1220,6 +1220,7 @@ class _DriverAppState extends State<DriverApp> {
               DriverGigDisclosureSection(
                 tileKey: const ValueKey('booked-gigs-dropdown'),
                 title: 'Booked gigs',
+                countLabel: 'Booked',
                 count: gigLists.booked.length,
                 emptyMessage: 'No booked gigs yet.',
                 contentKey: const ValueKey('booked-gigs'),
@@ -1239,23 +1240,22 @@ class _DriverAppState extends State<DriverApp> {
                     .toList(),
               ),
               const SizedBox(height: 16),
-              const SectionTitle('Completed gigs'),
-              const SizedBox(height: 12),
-              if (gigLists.completed.isEmpty)
-                const EmptySection(message: 'No completed gigs yet.')
-              else
-                Column(
-                  key: const ValueKey('completed-gigs'),
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: gigLists.completed
-                      .map(
-                        (gig) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: DriverGigTile(gig: gig),
-                        ),
-                      )
-                      .toList(),
-                ),
+              DriverGigDisclosureSection(
+                tileKey: const ValueKey('completed-gigs-dropdown'),
+                title: 'Completed gigs',
+                countLabel: 'Completed',
+                count: gigLists.completed.length,
+                emptyMessage: 'No completed gigs yet.',
+                contentKey: const ValueKey('completed-gigs'),
+                children: gigLists.completed
+                    .map(
+                      (gig) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: DriverGigTile(gig: gig),
+                      ),
+                    )
+                    .toList(),
+              ),
             ],
           );
         },
@@ -1442,6 +1442,7 @@ class DriverGigDisclosureSection extends StatelessWidget {
   const DriverGigDisclosureSection({
     required this.tileKey,
     required this.title,
+    required this.countLabel,
     required this.count,
     required this.emptyMessage,
     required this.contentKey,
@@ -1451,6 +1452,7 @@ class DriverGigDisclosureSection extends StatelessWidget {
 
   final Key tileKey;
   final String title;
+  final String countLabel;
   final int count;
   final String emptyMessage;
   final Key contentKey;
@@ -1475,7 +1477,7 @@ class DriverGigDisclosureSection extends StatelessWidget {
           title: Row(
             children: [
               Expanded(child: SectionTitle(title)),
-              StatusChip(label: 'Booked', count: count),
+              StatusChip(label: countLabel, count: count),
             ],
           ),
           children: [
