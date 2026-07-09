@@ -27,7 +27,7 @@ The Vercel projects are static-upload projects rather than Git-linked projects, 
 
 - Dispatcher production deployment: `dpl_Dytog5w5kYygrZiYgpygxAB6DuCi`
 - Dispatcher production alias: https://flovi-dispatcher.vercel.app
-- Driver production deployment: `dpl_BZq1enbAW55qGCYY3QFa2uEbuEky`
+- Driver production deployment: `dpl_AXHTWof5YddU46h5Ui3D9fKZBMQq`
 - Driver production alias: https://flovi-driver.vercel.app
 
 ## Smoke Checks

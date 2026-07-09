@@ -16,7 +16,7 @@
 - [x] GitHub repository is public.
 - [x] GitHub Actions verification passed on the latest reviewed `main` commit: https://github.com/txemaleon/flovi-ai-build-challenge/actions/runs/29002079263
 - [x] Vercel dispatcher production deployment is ready: `dpl_Dytog5w5kYygrZiYgpygxAB6DuCi`.
-- [x] Vercel driver production deployment is ready: `dpl_BZq1enbAW55qGCYY3QFa2uEbuEky`.
+- [x] Vercel driver production deployment is ready: `dpl_AXHTWof5YddU46h5Ui3D9fKZBMQq`.
 - [x] Dispatcher production login renders `Sign in with Google`.
 - [x] Driver production bundle contains `Sign in with Google`.
 - [x] Supabase Google OAuth authorize endpoint returns `302` for dispatcher and driver redirects.
