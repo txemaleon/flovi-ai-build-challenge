@@ -319,7 +319,10 @@ Delivery:
 Verification:
 
 - `npm test -w @flovi/core -- --run test/deployment-artifacts.test.ts` passed with 1 file and 5 tests.
-- Remaining final checks are tracked in `docs/submission-checklist.md`.
+- GitHub Actions verification passed for delivery packaging commit `dc877be` on run `28998831983`.
+- Vercel production deploys were manually promoted from current static app builds for dispatcher and driver.
+- Hosted smoke checks passed for HTTP 200 responses, Supabase project references in production bundles, Google sign-in text, and Supabase OAuth `302` redirects for both live URLs.
+- Final status recorded in `docs/final-delivery-status.md`.
 
 ## 2026-07-08 - Slice 12
 

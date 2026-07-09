@@ -191,7 +191,7 @@
 - [x] Add reflection notes
 - [x] Add presentation prep answers
 - [x] Add submission checklist and message template
-- [ ] Push final commits to GitHub
-- [ ] Confirm GitHub Actions on latest commit
-- [ ] Confirm Vercel dispatcher and driver production deployments on latest commit
-- [ ] Run final hosted smoke checks
+- [x] Push final commits to GitHub
+- [x] Confirm GitHub Actions on latest delivery commit
+- [x] Confirm Vercel dispatcher and driver production deployments
+- [x] Run final hosted smoke checks

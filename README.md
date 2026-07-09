@@ -112,6 +112,7 @@ See [docs/deployment.md](docs/deployment.md) for Supabase, OAuth, seed, and Verc
 - Walkthrough script: [docs/walkthrough-script.md](docs/walkthrough-script.md)
 - Reflection: [docs/reflection.md](docs/reflection.md)
 - Presentation prep: [docs/presentation-prep.md](docs/presentation-prep.md)
+- Final delivery status: [docs/final-delivery-status.md](docs/final-delivery-status.md)
 
 ## Screenshots
 
